@@ -18,5 +18,8 @@
   },
   "allowScripts": {
     "@parcel/watcher@2.5.6": true
+  },
+  "dependencies": {
+    "wgpu-matrix": "^3.4.2"
   }
 }

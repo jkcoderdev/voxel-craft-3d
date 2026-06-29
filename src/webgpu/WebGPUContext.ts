@@ -1,15 +1,15 @@
-export class GPUInstance {
+export class WebGPUContext {
   public readonly adapter: GPUAdapter;
   public readonly device: GPUDevice;
   public readonly preferredCanvasFormat: GPUTextureFormat;
 
-  constructor(adapter: GPUAdapter, device: GPUDevice, format: GPUTextureFormat) {
+  private constructor(adapter: GPUAdapter, device: GPUDevice, format: GPUTextureFormat) {
     this.adapter = adapter;
     this.device = device;
     this.preferredCanvasFormat = format;
   }
 
-  static async create(): Promise<GPUInstance> {
+  static async create(): Promise<WebGPUContext> {
     if (!navigator.gpu) {
       throw new Error(
         'WebGPU is not supported in this browser. ' +
@@ -28,7 +28,11 @@ export class GPUInstance {
     const device = await adapter.requestDevice();
     const format = navigator.gpu.getPreferredCanvasFormat();
 
-    return new GPUInstance(adapter, device, format);
+    return new WebGPUContext(adapter, device, format);
+  }
+
+  get queue() {
+    return this.device.queue;
   }
 
   destroy(): void {

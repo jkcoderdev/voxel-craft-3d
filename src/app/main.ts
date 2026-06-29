@@ -1,10 +1,240 @@
 import '@/styles/main.scss';
 
-import { GPUInstance } from '@/webgpu/GPUInstance';
+import { WebGPUContext } from '@/webgpu/WebGPUContext';
 import { queryCanvasById, queryElementById } from '@/shared/dom';
+
+import cubeShader from '@/shaders/cube.wgsl?raw';
+import { Camera } from '@/engine/core/Camera';
+import { ResizeTracker } from '@/engine/core/ResizeTracker';
+import { FrameLoop } from '@/engine/core/FrameLoop';
+import { vec3, utils, mat4 } from 'wgpu-matrix';
 
 const container = queryElementById('container');
 const worldCanvas = queryCanvasById('world-canvas');
 const overlayCanvas = queryCanvasById('overlay-canvas');
 
-const gpu = await GPUInstance.create();
+const gpu = await WebGPUContext.create();
+
+const context = worldCanvas.getContext('webgpu');
+if (!context) {
+  throw new Error('Failed to get WebGPU context from world canvas.');
+}
+
+context.configure({
+  device: gpu.device,
+  format: gpu.preferredCanvasFormat,
+  alphaMode: 'opaque',
+});
+
+const camera = new Camera({
+  position: vec3.create(0, 0, 5),
+  fov: utils.degToRad(60),
+});
+
+let depthTexture: GPUTexture = gpu.device.createTexture({
+  size: [1, 1],
+  format: 'depth24plus',
+  usage: GPUTextureUsage.RENDER_ATTACHMENT,
+});
+
+let depthTextureView: GPUTextureView = depthTexture.createView();
+
+const resizeTracker = new ResizeTracker(container, ({ physicalWidth, physicalHeight }) => {
+  worldCanvas.width = physicalWidth;
+  worldCanvas.height = physicalHeight;
+
+  overlayCanvas.width = physicalWidth;
+  overlayCanvas.height = physicalHeight;
+
+  if (depthTexture) {
+    depthTexture.destroy();
+  }
+
+  depthTexture = gpu.device.createTexture({
+    size: [physicalWidth, physicalHeight],
+    format: 'depth24plus',
+    usage: GPUTextureUsage.RENDER_ATTACHMENT,
+  });
+
+  depthTextureView = depthTexture.createView();
+
+  camera.aspect = physicalWidth / physicalHeight;
+});
+
+resizeTracker.update();
+
+if (!depthTexture || !depthTextureView) {
+  throw new Error('Depth texture was not initialized.');
+}
+
+const shaderModule = gpu.device.createShaderModule({
+  label: 'Cube Shader Module',
+  code: cubeShader,
+});
+
+const pipeline = gpu.device.createRenderPipeline({
+  label: 'Cube Render Pipeline',
+  layout: 'auto',
+  vertex: {
+    module: shaderModule,
+    entryPoint: 'vsMain',
+    buffers: [
+      {
+        arrayStride: 24,
+        attributes: [
+          { shaderLocation: 0, offset: 0, format: 'float32x3' },
+          { shaderLocation: 1, offset: 12, format: 'float32x3' },
+        ],
+      },
+    ],
+  },
+  fragment: {
+    module: shaderModule,
+    entryPoint: 'fsMain',
+    targets: [{ format: gpu.preferredCanvasFormat }],
+  },
+  primitive: {
+    topology: 'triangle-list',
+    cullMode: 'back',
+  },
+  depthStencil: {
+    depthCompare: 'less',
+    depthWriteEnabled: true,
+    format: 'depth24plus',
+  },
+});
+
+const UNIFORM_BUFFER_SIZE = 128; // 64 bytes viewProjectionMatrix (16 * 4 bytes) + 64 bytes modelMatrix (16 * 4 bytes)
+
+const uniformBuffer = gpu.device.createBuffer({
+  label: 'Cube Uniform Buffer',
+  size: UNIFORM_BUFFER_SIZE,
+  usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+});
+
+const bindGroup = gpu.device.createBindGroup({
+  label: 'Cube Bind Group',
+  layout: pipeline.getBindGroupLayout(0),
+  entries: [
+    {
+      binding: 0,
+      resource: { buffer: uniformBuffer },
+    },
+  ],
+});
+
+// prettier-ignore
+const VERTEX_DATA = new Float32Array([
+  // Front face (z = 1)
+  // position         normal
+  -1, -1,  1,         0,  0,  1,
+   1, -1,  1,         0,  0,  1,
+   1,  1,  1,         0,  0,  1,
+  -1, -1,  1,         0,  0,  1,
+   1,  1,  1,         0,  0,  1,
+  -1,  1,  1,         0,  0,  1,
+
+  // Back face (z = -1)
+   1, -1, -1,         0,  0, -1,
+  -1, -1, -1,         0,  0, -1,
+  -1,  1, -1,         0,  0, -1,
+   1, -1, -1,         0,  0, -1,
+  -1,  1, -1,         0,  0, -1,
+   1,  1, -1,         0,  0, -1,
+
+  // Top face (y = 1)
+  -1,  1,  1,         0,  1,  0,
+   1,  1,  1,         0,  1,  0,
+   1,  1, -1,         0,  1,  0,
+  -1,  1,  1,         0,  1,  0,
+   1,  1, -1,         0,  1,  0,
+  -1,  1, -1,         0,  1,  0,
+
+  // Bottom face (y = -1)
+  -1, -1, -1,         0, -1,  0,
+   1, -1, -1,         0, -1,  0,
+   1, -1,  1,         0, -1,  0,
+  -1, -1, -1,         0, -1,  0,
+   1, -1,  1,         0, -1,  0,
+  -1, -1,  1,         0, -1,  0,
+
+  // Right face (x = 1)
+   1, -1,  1,         1,  0,  0,
+   1, -1, -1,         1,  0,  0,
+   1,  1, -1,         1,  0,  0,
+   1, -1,  1,         1,  0,  0,
+   1,  1, -1,         1,  0,  0,
+   1,  1,  1,         1,  0,  0,
+
+  // Left face (x = -1)
+  -1, -1, -1,        -1,  0,  0,
+  -1, -1,  1,        -1,  0,  0,
+  -1,  1,  1,        -1,  0,  0,
+  -1, -1, -1,        -1,  0,  0,
+  -1,  1,  1,        -1,  0,  0,
+  -1,  1, -1,        -1,  0,  0,
+]);
+
+const vertexBuffer = gpu.device.createBuffer({
+  label: 'Cube Vertex Buffer',
+  size: VERTEX_DATA.byteLength,
+  usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+});
+
+gpu.queue.writeBuffer(vertexBuffer, 0, VERTEX_DATA);
+
+const VERTEX_COUNT = VERTEX_DATA.length / 6;
+
+const ANIMATION_DURATION = 4; // seconds
+
+const modelMatrix = mat4.create();
+
+const frameLoop = new FrameLoop((timestamp) => {
+  resizeTracker.update();
+  camera.update();
+
+  const angle = (timestamp / 1000 / ANIMATION_DURATION) * Math.PI * 2;
+
+  mat4.rotationY(angle, modelMatrix);
+  mat4.rotateX(modelMatrix, angle * 0.125, modelMatrix);
+  mat4.rotateZ(modelMatrix, angle * 0.125, modelMatrix);
+
+  const viewProjectionMatrix = camera.viewProjectionMatrix;
+
+  gpu.queue.writeBuffer(uniformBuffer, 0, viewProjectionMatrix.buffer, viewProjectionMatrix.byteOffset, 64);
+  gpu.queue.writeBuffer(uniformBuffer, 64, modelMatrix.buffer, modelMatrix.byteOffset, 64);
+
+  const textureView = context.getCurrentTexture().createView();
+
+  const commandEncoder = gpu.device.createCommandEncoder({
+    label: 'Cube Command Encoder',
+  });
+
+  const renderPass = commandEncoder.beginRenderPass({
+    label: 'Cube Render Pass',
+    colorAttachments: [
+      {
+        view: textureView,
+        clearValue: { r: 0.1, g: 0.1, b: 0.1, a: 1.0 },
+        loadOp: 'clear',
+        storeOp: 'store',
+      },
+    ],
+    depthStencilAttachment: {
+      view: depthTextureView,
+      depthClearValue: 1.0,
+      depthLoadOp: 'clear',
+      depthStoreOp: 'store',
+    },
+  });
+
+  renderPass.setPipeline(pipeline);
+  renderPass.setVertexBuffer(0, vertexBuffer);
+  renderPass.setBindGroup(0, bindGroup);
+  renderPass.draw(VERTEX_COUNT, 1, 0, 0);
+  renderPass.end();
+
+  gpu.queue.submit([commandEncoder.finish()]);
+});
+
+frameLoop.start();
