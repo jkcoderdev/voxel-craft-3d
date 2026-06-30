@@ -90,8 +90,9 @@ export class Camera {
 
   private negativePosition = vec3.create();
   private normalizedRotation = quat.identity();
+
+  private viewDirty = true;
   private projectionDirty = true;
-  // TODO: viewDirty
 
   constructor(descriptor: CameraDescriptor = {}) {
     const {
@@ -123,7 +124,11 @@ export class Camera {
 
   set position(value: Vec3) {
     validatePosition(value);
-    this._position = vec3.clone(value);
+
+    if (this._position[0] !== value[0] || this._position[1] !== value[1] || this._position[2] !== value[2]) {
+      this._position = vec3.clone(value);
+      this.viewDirty = true;
+    }
   }
 
   get position(): Vec3 {
@@ -132,7 +137,11 @@ export class Camera {
 
   set positionX(value: number) {
     validateFiniteNumber('positionX', value);
-    this._position[0] = value;
+
+    if (this._position[0] !== value) {
+      this._position[0] = value;
+      this.viewDirty = true;
+    }
   }
 
   get positionX(): number {
@@ -141,7 +150,11 @@ export class Camera {
 
   set positionY(value: number) {
     validateFiniteNumber('positionY', value);
-    this._position[1] = value;
+
+    if (this._position[1] !== value) {
+      this._position[1] = value;
+      this.viewDirty = true;
+    }
   }
 
   get positionY(): number {
@@ -150,7 +163,11 @@ export class Camera {
 
   set positionZ(value: number) {
     validateFiniteNumber('positionZ', value);
-    this._position[2] = value;
+
+    if (this._position[2] !== value) {
+      this._position[2] = value;
+      this.viewDirty = true;
+    }
   }
 
   get positionZ(): number {
@@ -159,7 +176,16 @@ export class Camera {
 
   set rotation(value: Quat) {
     validateRotation(value);
-    this._rotation = quat.clone(value);
+
+    if (
+      this._rotation[0] !== value[0] ||
+      this._rotation[1] !== value[1] ||
+      this._rotation[2] !== value[2] ||
+      this._rotation[3] !== value[3]
+    ) {
+      this._rotation = quat.clone(value);
+      this.viewDirty = true;
+    }
   }
 
   get rotation(): Quat {
@@ -168,10 +194,14 @@ export class Camera {
 
   set rotationX(value: number) {
     validateFiniteNumber('rotationX', value);
-    const rotation = quat.clone(this._rotation);
-    rotation[0] = value;
-    validateRotation(rotation);
-    this._rotation = rotation;
+
+    if (this._rotation[0] !== value) {
+      const rotation = quat.clone(this._rotation);
+      rotation[0] = value;
+      validateRotation(rotation);
+      this._rotation = rotation;
+      this.viewDirty = true;
+    }
   }
 
   get rotationX(): number {
@@ -180,10 +210,14 @@ export class Camera {
 
   set rotationY(value: number) {
     validateFiniteNumber('rotationY', value);
-    const rotation = quat.clone(this._rotation);
-    rotation[1] = value;
-    validateRotation(rotation);
-    this._rotation = rotation;
+
+    if (this._rotation[1] !== value) {
+      const rotation = quat.clone(this._rotation);
+      rotation[1] = value;
+      validateRotation(rotation);
+      this._rotation = rotation;
+      this.viewDirty = true;
+    }
   }
 
   get rotationY(): number {
@@ -192,10 +226,14 @@ export class Camera {
 
   set rotationZ(value: number) {
     validateFiniteNumber('rotationZ', value);
-    const rotation = quat.clone(this._rotation);
-    rotation[2] = value;
-    validateRotation(rotation);
-    this._rotation = rotation;
+
+    if (this._rotation[2] !== value) {
+      const rotation = quat.clone(this._rotation);
+      rotation[2] = value;
+      validateRotation(rotation);
+      this._rotation = rotation;
+      this.viewDirty = true;
+    }
   }
 
   get rotationZ(): number {
@@ -204,10 +242,14 @@ export class Camera {
 
   set rotationW(value: number) {
     validateFiniteNumber('rotationW', value);
-    const rotation = quat.clone(this._rotation);
-    rotation[3] = value;
-    validateRotation(rotation);
-    this._rotation = rotation;
+
+    if (this._rotation[3] !== value) {
+      const rotation = quat.clone(this._rotation);
+      rotation[3] = value;
+      validateRotation(rotation);
+      this._rotation = rotation;
+      this.viewDirty = true;
+    }
   }
 
   get rotationW(): number {
@@ -267,26 +309,32 @@ export class Camera {
   }
 
   update(): void {
-    const rotationLength = Math.hypot(this._rotation[0], this._rotation[1], this._rotation[2], this._rotation[3]);
+    const viewProjectionDirty = this.viewDirty || this.projectionDirty;
 
-    this.normalizedRotation[0] = this._rotation[0] / rotationLength;
-    this.normalizedRotation[1] = this._rotation[1] / rotationLength;
-    this.normalizedRotation[2] = this._rotation[2] / rotationLength;
-    this.normalizedRotation[3] = this._rotation[3] / rotationLength;
+    if (this.viewDirty) {
+      const rotationLength = Math.hypot(this._rotation[0], this._rotation[1], this._rotation[2], this._rotation[3]);
 
-    // 1. Get the rotation matrix from the quaternion (R)
-    mat4.fromQuat(this._rotation, this.viewMatrix);
+      this.normalizedRotation[0] = this._rotation[0] / rotationLength;
+      this.normalizedRotation[1] = this._rotation[1] / rotationLength;
+      this.normalizedRotation[2] = this._rotation[2] / rotationLength;
+      this.normalizedRotation[3] = this._rotation[3] / rotationLength;
 
-    // 2. Transpose it. Now viewMatrix = R^-1
-    mat4.transpose(this.viewMatrix, this.viewMatrix);
+      // 1. Get the rotation matrix from the quaternion (R)
+      mat4.fromQuat(this._rotation, this.viewMatrix);
 
-    // 3. Negate the position. Now negPosition = T^-1
-    vec3.negate(this._position, this.negativePosition);
+      // 2. Transpose it. Now viewMatrix = R^-1
+      mat4.transpose(this.viewMatrix, this.viewMatrix);
 
-    // 4. Multiply: R^-1 * T^-1.
-    // In wgpu-matrix, mat4.translate(M, v) is M * Translation(v).
-    // This gives us the final View Matrix without ever calling invert().
-    mat4.translate(this.viewMatrix, this.negativePosition, this.viewMatrix);
+      // 3. Negate the position. Now negPosition = T^-1
+      vec3.negate(this._position, this.negativePosition);
+
+      // 4. Multiply: R^-1 * T^-1.
+      // In wgpu-matrix, mat4.translate(M, v) is M * Translation(v).
+      // This gives us the final View Matrix without ever calling invert().
+      mat4.translate(this.viewMatrix, this.negativePosition, this.viewMatrix);
+
+      this.viewDirty = false;
+    }
 
     // 5. Build Projection Matrix (only if needed)
     if (this.projectionDirty) {
@@ -294,8 +342,10 @@ export class Camera {
       this.projectionDirty = false;
     }
 
-    // 6. Combine
-    mat4.multiply(this.projectionMatrix, this.viewMatrix, this._viewProjectionMatrix);
+    // 6. Combine (only if either source matrix changed)
+    if (viewProjectionDirty) {
+      mat4.multiply(this.projectionMatrix, this.viewMatrix, this._viewProjectionMatrix);
+    }
   }
 
   get viewProjectionMatrix(): Float32Array {
