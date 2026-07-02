@@ -1,13 +1,14 @@
 import '@/styles/main.scss';
 
+import cubeShader from '@/shaders/cube.wgsl?raw';
+
 import { WebGPUContext } from '@/webgpu/WebGPUContext';
 import { queryCanvasById, queryElementById } from '@/shared/dom';
-
-import cubeShader from '@/shaders/cube.wgsl?raw';
 import { Camera } from '@/engine/core/Camera';
 import { ResizeTracker } from '@/engine/core/ResizeTracker';
 import { FrameLoop } from '@/engine/core/FrameLoop';
 import { vec3, utils, mat4 } from 'wgpu-matrix';
+import { DepthTexture } from '@/webgpu/DepthTexture';
 
 const container = queryElementById('container');
 const worldCanvas = queryCanvasById('world-canvas');
@@ -31,13 +32,7 @@ const camera = new Camera({
   fov: utils.degToRad(60),
 });
 
-let depthTexture: GPUTexture = gpu.device.createTexture({
-  size: [1, 1],
-  format: 'depth24plus',
-  usage: GPUTextureUsage.RENDER_ATTACHMENT,
-});
-
-let depthTextureView: GPUTextureView = depthTexture.createView();
+const depthTexture = new DepthTexture(gpu.device);
 
 const resizeTracker = new ResizeTracker(container, ({ physicalWidth, physicalHeight }) => {
   worldCanvas.width = physicalWidth;
@@ -46,26 +41,12 @@ const resizeTracker = new ResizeTracker(container, ({ physicalWidth, physicalHei
   overlayCanvas.width = physicalWidth;
   overlayCanvas.height = physicalHeight;
 
-  if (depthTexture) {
-    depthTexture.destroy();
-  }
-
-  depthTexture = gpu.device.createTexture({
-    size: [physicalWidth, physicalHeight],
-    format: 'depth24plus',
-    usage: GPUTextureUsage.RENDER_ATTACHMENT,
-  });
-
-  depthTextureView = depthTexture.createView();
+  depthTexture.resize(physicalWidth, physicalHeight);
 
   camera.aspect = physicalWidth / physicalHeight;
 });
 
 resizeTracker.update();
-
-if (!depthTexture || !depthTextureView) {
-  throw new Error('Depth texture was not initialized.');
-}
 
 const shaderModule = gpu.device.createShaderModule({
   label: 'Cube Shader Module',
@@ -100,7 +81,7 @@ const pipeline = gpu.device.createRenderPipeline({
   depthStencil: {
     depthCompare: 'less',
     depthWriteEnabled: true,
-    format: 'depth24plus',
+    format: depthTexture.format,
   },
 });
 
@@ -204,7 +185,7 @@ const frameLoop = new FrameLoop((timestamp) => {
   gpu.queue.writeBuffer(uniformBuffer, 0, viewProjectionMatrix.buffer, viewProjectionMatrix.byteOffset, 64);
   gpu.queue.writeBuffer(uniformBuffer, 64, modelMatrix.buffer, modelMatrix.byteOffset, 64);
 
-  const textureView = context.getCurrentTexture().createView();
+  const canvasTextureView = context.getCurrentTexture().createView();
 
   const commandEncoder = gpu.device.createCommandEncoder({
     label: 'Cube Command Encoder',
@@ -214,14 +195,14 @@ const frameLoop = new FrameLoop((timestamp) => {
     label: 'Cube Render Pass',
     colorAttachments: [
       {
-        view: textureView,
+        view: canvasTextureView,
         clearValue: { r: 0.1, g: 0.1, b: 0.1, a: 1.0 },
         loadOp: 'clear',
         storeOp: 'store',
       },
     ],
     depthStencilAttachment: {
-      view: depthTextureView,
+      view: depthTexture.view,
       depthClearValue: 1.0,
       depthLoadOp: 'clear',
       depthStoreOp: 'store',

@@ -36,6 +36,8 @@ src/
     dom.ts (DOM helpers)
   webgpu/ (WebGPU helpers and abstractions)
   shaders/ (.wgsl shader files)
+  engine/
+    core/
 ```
 
 **Style guide**:
@@ -57,7 +59,7 @@ src/shared/types/vite.d.ts
 /// <reference types="vite/client" />
 
 declare module '*.scss';
-declare module '*.wgsl';
+declare module '*.wgsl?raw';
 ```
 
 index.html
@@ -103,7 +105,43 @@ body {
   inset: 0;
 }
 
+#world-canvas,
+#overlay-canvas {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+
 // ...
+```
+
+src/webgpu/WebGPUContext.ts
+
+```ts
+export class WebGPUContext {
+  public readonly adapter: GPUAdapter;
+  public readonly device: GPUDevice;
+  public readonly preferredCanvasFormat: GPUTextureFormat;
+
+  private constructor(adapter: GPUAdapter, device: GPUDevice, format: GPUTextureFormat) {
+    this.adapter = adapter;
+    this.device = device;
+    this.preferredCanvasFormat = format;
+  }
+
+  static async create(): Promise<WebGPUContext> {
+    // ...
+  }
+
+  get queue(): GPUQueue {
+    return this.device.queue;
+  }
+
+  destroy(): void {
+    this.device.destroy();
+  }
+}
 ```
 
 src/app/main.ts
