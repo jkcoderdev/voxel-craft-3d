@@ -1,8 +1,10 @@
 export interface DepthTextureDescriptor {
-  format?: GPUTextureFormat;
+  label?: string;
+  format: GPUTextureFormat;
+  usage: GPUTextureUsageFlags;
+
   width?: number;
   height?: number;
-  label?: string;
 }
 
 function assertTextureSize(width: number, height: number) {
@@ -15,31 +17,24 @@ export class DepthTexture {
   private _texture: GPUTexture;
   private _view: GPUTextureView;
 
-  private readonly textureDescriptor: GPUTextureDescriptor;
+  private readonly textureDescriptor: GPUTextureDescriptor & { size: [number, number] };
   private readonly viewDescriptor: GPUTextureViewDescriptor;
-
-  private width: number;
-  private height: number;
 
   constructor(
     private readonly device: GPUDevice,
-    descriptor: DepthTextureDescriptor = {},
+    descriptor: DepthTextureDescriptor,
   ) {
     const width = descriptor.width ?? 1;
     const height = descriptor.height ?? 1;
 
     assertTextureSize(width, height);
 
-    this.width = width;
-    this.height = height;
-
     const label = descriptor.label ?? 'Depth Texture';
-    const format = descriptor.format ?? 'depth24plus';
 
     this.textureDescriptor = {
       size: [width, height],
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      format,
+      usage: descriptor.usage,
+      format: descriptor.format,
       label,
     };
 
@@ -66,15 +61,13 @@ export class DepthTexture {
   resize(width: number, height: number): void {
     assertTextureSize(width, height);
 
-    if (this.width !== width || this.height !== height) {
+    if (this.textureDescriptor.size[0] !== width || this.textureDescriptor.size[1] !== height) {
       this._texture.destroy();
 
       this.textureDescriptor.size = [width, height];
+
       this._texture = this.device.createTexture(this.textureDescriptor);
       this._view = this._texture.createView(this.viewDescriptor);
-
-      this.width = width;
-      this.height = height;
     }
   }
 

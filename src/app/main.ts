@@ -9,21 +9,13 @@ import { ResizeTracker } from '@/engine/core/ResizeTracker';
 import { FrameLoop } from '@/engine/core/FrameLoop';
 import { vec3, utils, mat4 } from 'wgpu-matrix';
 import { DepthTexture } from '@/webgpu/DepthTexture';
+import { WebGPUSurface } from '@/webgpu/WebGPUSurface';
 
 const container = queryElementById('container');
-const worldCanvas = queryCanvasById('world-canvas');
 const overlayCanvas = queryCanvasById('overlay-canvas');
 
 const gpu = await WebGPUContext.create();
-
-const context = worldCanvas.getContext('webgpu');
-if (!context) {
-  throw new Error('Failed to get WebGPU context from world canvas.');
-}
-
-context.configure({
-  device: gpu.device,
-  format: gpu.preferredCanvasFormat,
+const worldCanvasSurface = WebGPUSurface.create('#world-canvas', gpu, {
   alphaMode: 'opaque',
 });
 
@@ -32,11 +24,14 @@ const camera = new Camera({
   fov: utils.degToRad(60),
 });
 
-const depthTexture = new DepthTexture(gpu.device);
+const depthTexture = new DepthTexture(gpu.device, {
+  format: 'depth24plus',
+  usage: GPUTextureUsage.RENDER_ATTACHMENT,
+  label: 'Depth Texture',
+});
 
 const resizeTracker = new ResizeTracker(container, ({ physicalWidth, physicalHeight }) => {
-  worldCanvas.width = physicalWidth;
-  worldCanvas.height = physicalHeight;
+  worldCanvasSurface.resize(physicalWidth, physicalHeight);
 
   overlayCanvas.width = physicalWidth;
   overlayCanvas.height = physicalHeight;
@@ -185,8 +180,6 @@ const frameLoop = new FrameLoop((timestamp) => {
   gpu.queue.writeBuffer(uniformBuffer, 0, viewProjectionMatrix.buffer, viewProjectionMatrix.byteOffset, 64);
   gpu.queue.writeBuffer(uniformBuffer, 64, modelMatrix.buffer, modelMatrix.byteOffset, 64);
 
-  const canvasTextureView = context.getCurrentTexture().createView();
-
   const commandEncoder = gpu.device.createCommandEncoder({
     label: 'Cube Command Encoder',
   });
@@ -195,7 +188,7 @@ const frameLoop = new FrameLoop((timestamp) => {
     label: 'Cube Render Pass',
     colorAttachments: [
       {
-        view: canvasTextureView,
+        view: worldCanvasSurface.view,
         clearValue: { r: 0.1, g: 0.1, b: 0.1, a: 1.0 },
         loadOp: 'clear',
         storeOp: 'store',
