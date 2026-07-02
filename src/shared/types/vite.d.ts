@@ -1,4 +1,4 @@
 /// <reference types="vite/client" />
 
 declare module '*.scss';
-declare module '*.wgsl';
+declare module '*.wgsl?raw';
