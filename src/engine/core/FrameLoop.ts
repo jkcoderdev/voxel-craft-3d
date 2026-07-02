@@ -4,7 +4,7 @@ export class FrameLoop {
   private readonly handler: FrameLoopFunction;
   private readonly boundLoop: FrameRequestCallback;
 
-  private isRunning = false;
+  private _running = false;
   private animationFrameId: number | null = null;
 
   constructor(handler: FrameLoopFunction) {
@@ -13,14 +13,14 @@ export class FrameLoop {
   }
 
   start(): void {
-    if (this.isRunning) return;
+    if (this._running) return;
 
-    this.isRunning = true;
+    this._running = true;
     this.animationFrameId = requestAnimationFrame(this.boundLoop);
   }
 
   stop(): void {
-    this.isRunning = false;
+    this._running = false;
 
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
@@ -29,15 +29,15 @@ export class FrameLoop {
   }
 
   get running(): boolean {
-    return this.isRunning;
+    return this._running;
   }
 
-  private loop(timestamp: number) {
-    if (!this.isRunning) return;
+  private loop(timestamp: number): void {
+    if (!this._running) return;
 
     this.handler(timestamp);
 
-    if (this.isRunning) {
+    if (this._running) {
       this.animationFrameId = requestAnimationFrame(this.boundLoop);
     }
   }

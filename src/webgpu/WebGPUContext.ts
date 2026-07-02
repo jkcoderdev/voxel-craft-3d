@@ -31,7 +31,7 @@ export class WebGPUContext {
     return new WebGPUContext(adapter, device, format);
   }
 
-  get queue() {
+  get queue(): GPUQueue {
     return this.device.queue;
   }
 

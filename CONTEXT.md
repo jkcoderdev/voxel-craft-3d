@@ -47,6 +47,7 @@ src/
 - do not use redundant `public` keywords (only) for methods
 - use descriptors for constructors and methods that need many parameters
 - use `// prettier-ignore` where the code should not be formated
+- every function and method must have a return type defined
 
 **Important files (fragments)**:
 

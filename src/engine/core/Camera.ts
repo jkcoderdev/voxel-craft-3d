@@ -265,7 +265,7 @@ export class Camera {
     }
   }
 
-  get fov() {
+  get fov(): number {
     return this._fov;
   }
 
@@ -278,7 +278,7 @@ export class Camera {
     }
   }
 
-  get aspect() {
+  get aspect(): number {
     return this._aspect;
   }
 
@@ -291,7 +291,7 @@ export class Camera {
     }
   }
 
-  get near() {
+  get near(): number {
     return this._near;
   }
 
@@ -304,7 +304,7 @@ export class Camera {
     }
   }
 
-  get far() {
+  get far(): number {
     return this._far;
   }
 
