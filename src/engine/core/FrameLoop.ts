@@ -1,4 +1,9 @@
-export type FrameLoopFunction = (timestamp: number) => void;
+export interface FrameData {
+  timestamp: number;
+  deltaTime: number;
+}
+
+export type FrameLoopFunction = (frame: FrameData) => void;
 
 export class FrameLoop {
   private readonly handler: FrameLoopFunction;
@@ -6,6 +11,8 @@ export class FrameLoop {
 
   private _running = false;
   private animationFrameId: number | null = null;
+
+  private lastTimestamp: number | null = null;
 
   constructor(handler: FrameLoopFunction) {
     this.handler = handler;
@@ -16,6 +23,8 @@ export class FrameLoop {
     if (this._running) return;
 
     this._running = true;
+    this.lastTimestamp = null;
+
     this.animationFrameId = requestAnimationFrame(this.boundLoop);
   }
 
@@ -35,7 +44,14 @@ export class FrameLoop {
   private loop(timestamp: number): void {
     if (!this._running) return;
 
-    this.handler(timestamp);
+    if (!this.lastTimestamp) {
+      this.lastTimestamp = timestamp;
+    }
+
+    const deltaTime = timestamp - this.lastTimestamp;
+    this.lastTimestamp = timestamp;
+
+    this.handler({ timestamp, deltaTime });
 
     if (this._running) {
       this.animationFrameId = requestAnimationFrame(this.boundLoop);

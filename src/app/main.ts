@@ -10,6 +10,7 @@ import { FrameLoop } from '@/engine/core/FrameLoop';
 import { vec3, utils, mat4 } from 'wgpu-matrix';
 import { DepthTexture } from '@/webgpu/DepthTexture';
 import { WebGPUSurface } from '@/webgpu/WebGPUSurface';
+import { FlyCameraController } from '@/engine/core/FlyCameraController';
 
 const container = queryElementById('container');
 const overlayCanvas = queryCanvasById('overlay-canvas');
@@ -22,6 +23,15 @@ const worldCanvasSurface = WebGPUSurface.create('#world-canvas', gpu, {
 const camera = new Camera({
   position: vec3.create(0, 0, 5),
   fov: utils.degToRad(60),
+});
+
+const cameraController = new FlyCameraController({
+  camera,
+  element: container,
+});
+
+container.addEventListener('click', () => {
+  void cameraController.requestPointerLock();
 });
 
 const depthTexture = new DepthTexture(gpu.device, {
@@ -165,8 +175,9 @@ const ANIMATION_DURATION = 4; // seconds
 
 const modelMatrix = mat4.create();
 
-const frameLoop = new FrameLoop((timestamp) => {
+const frameLoop = new FrameLoop(({ timestamp, deltaTime }) => {
   resizeTracker.update();
+  cameraController.update(deltaTime / 1000);
   camera.update();
 
   const angle = (timestamp / 1000 / ANIMATION_DURATION) * Math.PI * 2;
