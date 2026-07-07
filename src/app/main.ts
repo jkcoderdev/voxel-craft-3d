@@ -1,16 +1,18 @@
 import '@/styles/main.scss';
 
-import cubeShader from '@/shaders/cube.wgsl?raw';
+import chunkShader from '@/shaders/chunk.wgsl?raw';
 
 import { WebGPUContext } from '@/webgpu/WebGPUContext';
 import { queryCanvasById, queryElementById } from '@/shared/dom';
 import { Camera } from '@/engine/core/Camera';
 import { ResizeTracker } from '@/engine/core/ResizeTracker';
 import { FrameLoop } from '@/engine/core/FrameLoop';
-import { vec3, utils, mat4 } from 'wgpu-matrix';
+import { vec3, utils } from 'wgpu-matrix';
 import { DepthTexture } from '@/webgpu/DepthTexture';
 import { WebGPUSurface } from '@/webgpu/WebGPUSurface';
 import { FlyCameraController } from '@/engine/core/FlyCameraController';
+import { Chunk } from '@/engine/world/Chunk';
+import { ChunkMeshBuilder } from '@/engine/world/ChunkMeshBuilder';
 
 const container = queryElementById('container');
 const overlayCanvas = queryCanvasById('overlay-canvas');
@@ -21,7 +23,7 @@ const worldCanvasSurface = WebGPUSurface.create('#world-canvas', gpu, {
 });
 
 const camera = new Camera({
-  position: vec3.create(0, 0, 5),
+  position: vec3.create(0, 32, 32),
   fov: utils.degToRad(60),
 });
 
@@ -55,7 +57,7 @@ resizeTracker.update();
 
 const shaderModule = gpu.device.createShaderModule({
   label: 'Cube Shader Module',
-  code: cubeShader,
+  code: chunkShader,
 });
 
 const pipeline = gpu.device.createRenderPipeline({
@@ -109,84 +111,19 @@ const bindGroup = gpu.device.createBindGroup({
   ],
 });
 
-// prettier-ignore
-const VERTEX_DATA = new Float32Array([
-  // Front face (z = 1)
-  // position         normal
-  -1, -1,  1,         0,  0,  1,
-   1, -1,  1,         0,  0,  1,
-   1,  1,  1,         0,  0,  1,
-  -1, -1,  1,         0,  0,  1,
-   1,  1,  1,         0,  0,  1,
-  -1,  1,  1,         0,  0,  1,
+const chunk = new Chunk(0, 0);
+chunk.generate();
 
-  // Back face (z = -1)
-   1, -1, -1,         0,  0, -1,
-  -1, -1, -1,         0,  0, -1,
-  -1,  1, -1,         0,  0, -1,
-   1, -1, -1,         0,  0, -1,
-  -1,  1, -1,         0,  0, -1,
-   1,  1, -1,         0,  0, -1,
+const chunkMeshBuilder = new ChunkMeshBuilder(gpu);
+const chunkMesh = chunkMeshBuilder.build(chunk);
 
-  // Top face (y = 1)
-  -1,  1,  1,         0,  1,  0,
-   1,  1,  1,         0,  1,  0,
-   1,  1, -1,         0,  1,  0,
-  -1,  1,  1,         0,  1,  0,
-   1,  1, -1,         0,  1,  0,
-  -1,  1, -1,         0,  1,  0,
-
-  // Bottom face (y = -1)
-  -1, -1, -1,         0, -1,  0,
-   1, -1, -1,         0, -1,  0,
-   1, -1,  1,         0, -1,  0,
-  -1, -1, -1,         0, -1,  0,
-   1, -1,  1,         0, -1,  0,
-  -1, -1,  1,         0, -1,  0,
-
-  // Right face (x = 1)
-   1, -1,  1,         1,  0,  0,
-   1, -1, -1,         1,  0,  0,
-   1,  1, -1,         1,  0,  0,
-   1, -1,  1,         1,  0,  0,
-   1,  1, -1,         1,  0,  0,
-   1,  1,  1,         1,  0,  0,
-
-  // Left face (x = -1)
-  -1, -1, -1,        -1,  0,  0,
-  -1, -1,  1,        -1,  0,  0,
-  -1,  1,  1,        -1,  0,  0,
-  -1, -1, -1,        -1,  0,  0,
-  -1,  1,  1,        -1,  0,  0,
-  -1,  1, -1,        -1,  0,  0,
-]);
-
-const vertexBuffer = gpu.device.createBuffer({
-  label: 'Cube Vertex Buffer',
-  size: VERTEX_DATA.byteLength,
-  usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-});
-
-gpu.queue.writeBuffer(vertexBuffer, 0, VERTEX_DATA);
-
-const VERTEX_COUNT = VERTEX_DATA.length / 6;
-
-const ANIMATION_DURATION = 4; // seconds
-
-const modelMatrix = mat4.create();
-
-const frameLoop = new FrameLoop(({ timestamp, deltaTime }) => {
+const frameLoop = new FrameLoop(({ deltaTime }) => {
   resizeTracker.update();
   cameraController.update(deltaTime / 1000);
   camera.update();
 
-  const angle = (timestamp / 1000 / ANIMATION_DURATION) * Math.PI * 2;
-
-  mat4.rotationY(angle, modelMatrix);
-  mat4.rotateX(modelMatrix, angle * 0.125, modelMatrix);
-  mat4.rotateZ(modelMatrix, angle * 0.125, modelMatrix);
-
   const viewProjectionMatrix = camera.viewProjectionMatrix;
+  const modelMatrix = chunkMesh.modelMatrix;
 
   gpu.queue.writeBuffer(uniformBuffer, 0, viewProjectionMatrix.buffer, viewProjectionMatrix.byteOffset, 64);
   gpu.queue.writeBuffer(uniformBuffer, 64, modelMatrix.buffer, modelMatrix.byteOffset, 64);
@@ -213,10 +150,14 @@ const frameLoop = new FrameLoop(({ timestamp, deltaTime }) => {
     },
   });
 
-  renderPass.setPipeline(pipeline);
-  renderPass.setVertexBuffer(0, vertexBuffer);
-  renderPass.setBindGroup(0, bindGroup);
-  renderPass.draw(VERTEX_COUNT, 1, 0, 0);
+  if (!chunkMesh.isEmpty) {
+    renderPass.setPipeline(pipeline);
+    renderPass.setVertexBuffer(0, chunkMesh.vertexBuffer);
+    renderPass.setIndexBuffer(chunkMesh.indexBuffer, chunkMesh.indexFormat);
+    renderPass.setBindGroup(0, bindGroup);
+    renderPass.drawIndexed(chunkMesh.indexCount);
+  }
+
   renderPass.end();
 
   gpu.queue.submit([commandEncoder.finish()]);

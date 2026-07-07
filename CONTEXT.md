@@ -38,6 +38,8 @@ src/
   shaders/ (.wgsl shader files)
   engine/
     core/
+    input/
+    world/
 ```
 
 **Style guide**:
