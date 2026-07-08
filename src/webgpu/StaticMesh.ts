@@ -1,5 +1,10 @@
 import type { WebGPUContext } from '@/webgpu/WebGPUContext';
-import type { Mat4 } from 'wgpu-matrix';
+
+export interface StaticMeshDescriptor {
+  vertices: Float32Array;
+  indices: Uint32Array | Uint16Array;
+  label?: string;
+}
 
 export class StaticMesh {
   public readonly vertexBuffer: GPUBuffer;
@@ -7,15 +12,18 @@ export class StaticMesh {
   public readonly indexCount: number;
   public readonly indexFormat: GPUIndexFormat;
 
-  constructor(gpu: WebGPUContext, vertices: Float32Array, indices: Uint32Array | Uint16Array) {
+  constructor(gpu: WebGPUContext, descriptor: StaticMeshDescriptor) {
+    const { vertices, indices } = descriptor;
+    const label = descriptor.label ?? 'Static Mesh';
+
     this.vertexBuffer = gpu.device.createBuffer({
-      label: 'Mesh Vertex Buffer',
+      label: `${label} Vertex Buffer`,
       size: Math.max(vertices.byteLength, 4),
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
     });
 
     this.indexBuffer = gpu.device.createBuffer({
-      label: 'Mesh Index Buffer',
+      label: `${label} Index Buffer`,
       size: Math.max(indices.byteLength, 4),
       usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
     });

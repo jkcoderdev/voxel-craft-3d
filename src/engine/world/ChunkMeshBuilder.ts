@@ -121,6 +121,10 @@ export class ChunkMeshBuilder {
       }
     }
 
-    return new StaticMesh(this.gpu, new Float32Array(vertices), new Uint32Array(indices));
+    return new StaticMesh(this.gpu, {
+      label: `Chunk (${chunk.cx}:${chunk.cz}) Mesh`,
+      vertices: new Float32Array(vertices),
+      indices: new Uint32Array(indices),
+    });
   }
 }
