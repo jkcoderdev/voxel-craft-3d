@@ -1,6 +1,5 @@
 struct Uniforms {
   viewProjectionMatrix: mat4x4<f32>,
-  modelMatrix: mat4x4<f32>,
 };
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -18,9 +17,8 @@ struct VertexOutput {
 @vertex
 fn vsMain(input: VertexInput) -> VertexOutput {
   var output: VertexOutput;
-  let worldPosition = uniforms.modelMatrix * vec4<f32>(input.position, 1.0);
-  output.position = uniforms.viewProjectionMatrix * worldPosition;
-  output.normal = (uniforms.modelMatrix * vec4<f32>(input.normal, 0.0)).xyz;
+  output.position = uniforms.viewProjectionMatrix * vec4<f32>(input.position, 1.0);
+  output.normal = input.normal;
   return output;
 }
 

@@ -6,9 +6,8 @@ export class StaticMesh {
   public readonly indexBuffer: GPUBuffer;
   public readonly indexCount: number;
   public readonly indexFormat: GPUIndexFormat;
-  public readonly modelMatrix: Float32Array;
 
-  constructor(gpu: WebGPUContext, vertices: Float32Array, indices: Uint32Array | Uint16Array, modelMatrix: Mat4) {
+  constructor(gpu: WebGPUContext, vertices: Float32Array, indices: Uint32Array | Uint16Array) {
     this.vertexBuffer = gpu.device.createBuffer({
       label: 'Mesh Vertex Buffer',
       size: Math.max(vertices.byteLength, 4),
@@ -26,7 +25,6 @@ export class StaticMesh {
 
     this.indexCount = indices.length;
     this.indexFormat = indices instanceof Uint16Array ? 'uint16' : 'uint32';
-    this.modelMatrix = new Float32Array(modelMatrix);
   }
 
   get isEmpty(): boolean {

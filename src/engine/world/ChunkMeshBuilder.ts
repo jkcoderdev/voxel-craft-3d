@@ -80,6 +80,9 @@ export class ChunkMeshBuilder {
 
     let indexOffset = 0;
 
+    const offsetX = chunk.cx * 16;
+    const offsetZ = chunk.cz * 16;
+
     for (let y = 0; y < 256; y++) {
       for (let z = 0; z < 16; z++) {
         for (let x = 0; x < 16; x++) {
@@ -107,7 +110,7 @@ export class ChunkMeshBuilder {
             if (block === 0 || adjacentBlock !== 0) continue;
 
             for (const corner of face.corners) {
-              vertices.push(corner[0] + x, corner[1] + y, corner[2] + z, ...normal);
+              vertices.push(corner[0] + x + offsetX, corner[1] + y, corner[2] + z + offsetZ, ...normal);
             }
 
             indices.push(indexOffset, indexOffset + 1, indexOffset + 2, indexOffset, indexOffset + 2, indexOffset + 3);
@@ -118,11 +121,6 @@ export class ChunkMeshBuilder {
       }
     }
 
-    return new StaticMesh(
-      this.gpu,
-      new Float32Array(vertices),
-      new Uint32Array(indices),
-      mat4.translation(vec3.create(chunk.cx * 16, 0, chunk.cz * 16)),
-    );
+    return new StaticMesh(this.gpu, new Float32Array(vertices), new Uint32Array(indices));
   }
 }

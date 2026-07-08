@@ -7,7 +7,7 @@ import { queryCanvasById, queryElementById } from '@/shared/dom';
 import { Camera } from '@/engine/core/Camera';
 import { ResizeTracker } from '@/engine/core/ResizeTracker';
 import { FrameLoop } from '@/engine/core/FrameLoop';
-import { vec3, utils } from 'wgpu-matrix';
+import { vec3, utils, mat4 } from 'wgpu-matrix';
 import { DepthTexture } from '@/webgpu/DepthTexture';
 import { WebGPUSurface } from '@/webgpu/WebGPUSurface';
 import { FlyCameraController } from '@/engine/core/FlyCameraController';
@@ -92,7 +92,7 @@ const pipeline = gpu.device.createRenderPipeline({
   },
 });
 
-const UNIFORM_BUFFER_SIZE = 128; // 64 bytes viewProjectionMatrix (16 * 4 bytes) + 64 bytes modelMatrix (16 * 4 bytes)
+const UNIFORM_BUFFER_SIZE = 64; // bytes -> viewProjectionMatrix (16 * 4 bytes [32-bit float])
 
 const uniformBuffer = gpu.device.createBuffer({
   label: 'Cube Uniform Buffer',
@@ -123,10 +123,8 @@ const frameLoop = new FrameLoop(({ deltaTime }) => {
   camera.update();
 
   const viewProjectionMatrix = camera.viewProjectionMatrix;
-  const modelMatrix = chunkMesh.modelMatrix;
 
   gpu.queue.writeBuffer(uniformBuffer, 0, viewProjectionMatrix.buffer, viewProjectionMatrix.byteOffset, 64);
-  gpu.queue.writeBuffer(uniformBuffer, 64, modelMatrix.buffer, modelMatrix.byteOffset, 64);
 
   const commandEncoder = gpu.device.createCommandEncoder({
     label: 'Cube Command Encoder',
