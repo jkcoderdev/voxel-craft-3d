@@ -1,7 +1,6 @@
 import type { Chunk } from '@/engine/world/Chunk';
 import { StaticMesh } from '@/webgpu/StaticMesh';
 import type { WebGPUContext } from '@/webgpu/WebGPUContext';
-import { mat4, vec3 } from 'wgpu-matrix';
 
 const CUBE_FACES = [
   // Front face (z = 1)

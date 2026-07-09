@@ -1,7 +1,5 @@
 import '@/styles/main.scss';
 
-import chunkShader from '@/shaders/chunk.wgsl?raw';
-
 import { WebGPUContext } from '@/webgpu/WebGPUContext';
 import { queryCanvasById, queryElementById } from '@/shared/dom';
 import { Camera } from '@/engine/core/Camera';

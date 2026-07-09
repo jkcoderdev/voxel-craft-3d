@@ -94,7 +94,7 @@ export class WorldRenderer {
       depthStencilAttachment: {
         view: this.depthTexture.view,
         depthClearValue: 1.0,
-        depthLoadOp: 'load',
+        depthLoadOp: 'clear',
         depthStoreOp: 'store',
       },
     });
