@@ -1,5 +1,6 @@
 struct Uniforms {
   viewProjectionMatrix: mat4x4<f32>,
+  timestamp: f32,
 };
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
@@ -25,7 +26,7 @@ fn vsMain(input: VertexInput) -> VertexOutput {
 @fragment
 fn fsMain(input: VertexOutput) -> @location(0) vec4<f32> {
   let normal = normalize(input.normal);
-  let lightDir = normalize(vec3<f32>(0.5, 1.0, 0.8));
+  let lightDir = normalize(vec3<f32>(0.5, 1.0 - ((uniforms.timestamp % 1) * 0.2), 0.8));
   let ambient = 0.2;
   let diffuse = max(dot(normal, lightDir), 0.0) * 0.8;
   let lighting = ambient + diffuse;
