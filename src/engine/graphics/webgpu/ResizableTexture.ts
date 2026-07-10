@@ -1,19 +1,14 @@
-export interface DepthTextureDescriptor {
-  label?: string;
-  format: GPUTextureFormat;
-  usage: GPUTextureUsageFlags;
+import type { WebGPUContext } from '@/engine/graphics/webgpu/WebGPUContext';
 
+export interface TextureDescriptor {
+  label?: string;
   width?: number;
   height?: number;
+  usage: GPUTextureUsageFlags;
+  format: GPUTextureFormat;
 }
 
-function assertTextureSize(width: number, height: number) {
-  if (width <= 0 || height <= 0 || !Number.isInteger(width) || !Number.isInteger(height)) {
-    throw new Error('Depth texture dimensions must be positive integers');
-  }
-}
-
-export class DepthTexture {
+export class ResizableTexture {
   private _texture: GPUTexture;
   private _view: GPUTextureView;
 
@@ -21,28 +16,26 @@ export class DepthTexture {
   private readonly viewDescriptor: GPUTextureViewDescriptor;
 
   constructor(
-    private readonly device: GPUDevice,
-    descriptor: DepthTextureDescriptor,
+    private readonly gpu: WebGPUContext,
+    descriptor: TextureDescriptor,
   ) {
+    const label = descriptor.label ?? 'Texture';
     const width = descriptor.width ?? 1;
     const height = descriptor.height ?? 1;
 
-    assertTextureSize(width, height);
-
-    const label = descriptor.label ?? 'Depth Texture';
-
     this.textureDescriptor = {
+      label,
+
       size: [width, height],
       usage: descriptor.usage,
       format: descriptor.format,
-      label,
     };
 
     this.viewDescriptor = {
       label: `${label} View`,
     };
 
-    this._texture = this.device.createTexture(this.textureDescriptor);
+    this._texture = this.gpu.device.createTexture(this.textureDescriptor);
     this._view = this._texture.createView(this.viewDescriptor);
   }
 
@@ -59,14 +52,12 @@ export class DepthTexture {
   }
 
   resize(width: number, height: number): void {
-    assertTextureSize(width, height);
-
     if (this.textureDescriptor.size[0] !== width || this.textureDescriptor.size[1] !== height) {
       this._texture.destroy();
 
       this.textureDescriptor.size = [width, height];
 
-      this._texture = this.device.createTexture(this.textureDescriptor);
+      this._texture = this.gpu.device.createTexture(this.textureDescriptor);
       this._view = this._texture.createView(this.viewDescriptor);
     }
   }

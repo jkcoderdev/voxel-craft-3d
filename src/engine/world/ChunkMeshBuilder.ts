@@ -1,6 +1,6 @@
 import type { Chunk } from '@/engine/world/Chunk';
-import { StaticMesh } from '@/webgpu/StaticMesh';
-import type { WebGPUContext } from '@/webgpu/WebGPUContext';
+import { StaticMesh } from '@/engine/graphics/webgpu/StaticMesh';
+import type { WebGPUContext } from '@/engine/graphics/webgpu/WebGPUContext';
 
 const CUBE_FACES = [
   // Front face (z = 1)
