@@ -53,6 +53,7 @@ const frameLoop = new FrameLoop(({ timestamp, deltaTime }) => {
   resizeTracker.update();
   controller.update(deltaTime / 1000);
   camera.update();
+  world.update(camera);
 
   worldRenderer.render(camera, timestamp);
   overlayRenderer.render();
