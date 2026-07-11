@@ -1,13 +1,12 @@
-struct CommonUniforms {
-  viewProjectionMatrix: mat4x4<f32>,
-  timestamp: f32,
+struct CameraUniforms {
+  viewMatrix: mat4x4<f32>,
+  projectionMatrix: mat4x4<f32>,
 };
 
-@group(0) @binding(0) var<uniform> commonUniforms: CommonUniforms;
+@group(0) @binding(0) var<uniform> camera: CameraUniforms;
 
 struct SkyboxUniforms {
-  cameraPosition: vec3<f32>,
-  skyboxSize: f32,
+  modelMatrix: mat4x4<f32>,
 };
 
 @group(1) @binding(0) var<uniform> skybox: SkyboxUniforms;
@@ -24,9 +23,7 @@ struct VertexOutput {
 @vertex
 fn vsMain(input: VertexInput) -> VertexOutput {
   var output: VertexOutput;
-  let worldPosition = skybox.cameraPosition + input.position * skybox.skyboxSize;
-
-  output.position = commonUniforms.viewProjectionMatrix * vec4<f32>(worldPosition, 1.0);
+  output.position = camera.projectionMatrix * skybox.modelMatrix * vec4<f32>(input.position, 1.0);
   output.direction = input.position;
   return output;
 }

@@ -1,9 +1,10 @@
-struct Uniforms {
-  viewProjectionMatrix: mat4x4<f32>,
-  timestamp: f32,
+struct CameraUniforms {
+  viewMatrix: mat4x4<f32>,
+  projectionMatrix: mat4x4<f32>,
 };
 
-@group(0) @binding(0) var<uniform> uniforms: Uniforms;
+@group(0) @binding(0) var<uniform> camera: CameraUniforms;
+@group(0) @binding(1) var<uniform> timestamp: f32;
 
 struct VertexInput {
   @location(0) position: vec3<f32>,
@@ -18,7 +19,7 @@ struct VertexOutput {
 @vertex
 fn vsMain(input: VertexInput) -> VertexOutput {
   var output: VertexOutput;
-  output.position = uniforms.viewProjectionMatrix * vec4<f32>(input.position, 1.0);
+  output.position = camera.projectionMatrix * camera.viewMatrix * vec4<f32>(input.position, 1.0);
   output.normal = input.normal;
   return output;
 }
@@ -42,7 +43,7 @@ fn fsMain(input: VertexOutput) -> @location(0) vec4<f32> {
   let lighting = ambient + diffuse;
 
   let baseColor = vec3<f32>(0.2, 0.6, 1.0);
-  let finalColor = rotateHue(baseColor, radians(length(input.position) + uniforms.timestamp * 360.0 * 2.0)) * lighting * (sin(radians(uniforms.timestamp * 360.0 * 0.125)) * 0.2 + 0.9);
+  let finalColor = rotateHue(baseColor, radians(length(input.position) + timestamp * 360.0 * 2.0)) * lighting * (sin(radians(timestamp * 360.0 * 0.125)) * 0.2 + 0.9);
 
   return vec4<f32>(finalColor, 1.0);
 }

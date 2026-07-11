@@ -84,8 +84,8 @@ export class Camera {
   private _near: number;
   private _far: number;
 
-  private viewMatrix: Mat4 = mat4.create();
-  private projectionMatrix: Mat4 = mat4.create();
+  private _viewMatrix: Mat4 = mat4.create();
+  private _projectionMatrix: Mat4 = mat4.create();
   private _viewProjectionMatrix: Mat4 = mat4.create();
 
   private negativePosition = vec3.create();
@@ -315,10 +315,10 @@ export class Camera {
       quat.normalize(this._rotation, this.normalizedRotation);
 
       // 1. Get the rotation matrix from the quaternion (R)
-      mat4.fromQuat(this.normalizedRotation, this.viewMatrix);
+      mat4.fromQuat(this.normalizedRotation, this._viewMatrix);
 
       // 2. Transpose it. Now viewMatrix = R^-1
-      mat4.transpose(this.viewMatrix, this.viewMatrix);
+      mat4.transpose(this._viewMatrix, this._viewMatrix);
 
       // 3. Negate the position. Now negPosition = T^-1
       vec3.negate(this._position, this.negativePosition);
@@ -326,24 +326,28 @@ export class Camera {
       // 4. Multiply: R^-1 * T^-1.
       // In wgpu-matrix, mat4.translate(M, v) is M * Translation(v).
       // This gives us the final View Matrix without ever calling invert().
-      mat4.translate(this.viewMatrix, this.negativePosition, this.viewMatrix);
+      mat4.translate(this._viewMatrix, this.negativePosition, this._viewMatrix);
 
       this.viewDirty = false;
     }
 
     // 5. Build Projection Matrix (only if needed)
     if (this.projectionDirty) {
-      mat4.perspective(this._fov, this._aspect, this._near, this._far, this.projectionMatrix);
+      mat4.perspective(this._fov, this._aspect, this._near, this._far, this._projectionMatrix);
       this.projectionDirty = false;
     }
 
     // 6. Combine (only if either source matrix changed)
     if (viewProjectionDirty) {
-      mat4.multiply(this.projectionMatrix, this.viewMatrix, this._viewProjectionMatrix);
+      mat4.multiply(this._projectionMatrix, this._viewMatrix, this._viewProjectionMatrix);
     }
   }
 
-  get viewProjectionMatrix(): Float32Array {
-    return this._viewProjectionMatrix as Float32Array;
+  get viewMatrix(): Float32Array {
+    return this._viewMatrix as Float32Array;
+  }
+
+  get projectionMatrix(): Float32Array {
+    return this._projectionMatrix as Float32Array;
   }
 }

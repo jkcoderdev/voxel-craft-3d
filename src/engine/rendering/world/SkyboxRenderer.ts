@@ -5,6 +5,7 @@ import type { WebGPUContext } from '@/engine/graphics/webgpu/WebGPUContext';
 import type { SharedUniforms } from '@/engine/rendering/world/SharedUniforms';
 import type { SubRenderer } from '@/engine/rendering/world/SubRenderer';
 import type { RendererResources } from '@/engine/rendering/world/WorldRenderer';
+import { mat4, quat } from 'wgpu-matrix';
 
 const SKYBOX_SIZE = 500;
 
@@ -68,7 +69,7 @@ export class SkyboxRenderer implements SubRenderer {
   private readonly pipeline: GPURenderPipeline;
   private readonly uniformBuffer: GPUBuffer;
   private readonly bindGroup: GPUBindGroup;
-  private readonly uniformArray = new Float32Array(4);
+  private readonly modelMatrix = new Float32Array(16);
 
   constructor(resources: RendererResources) {
     const { gpu, surface, depthTexture, sharedUniforms } = resources;
@@ -99,7 +100,7 @@ export class SkyboxRenderer implements SubRenderer {
 
     this.uniformBuffer = gpu.device.createBuffer({
       label: 'Skybox Uniform Buffer',
-      size: 24,
+      size: 64,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
 
@@ -149,12 +150,15 @@ export class SkyboxRenderer implements SubRenderer {
   }
 
   private updateUniformBuffer(camera: Camera): void {
-    const position = camera.position;
-    this.uniformArray[0] = position[0];
-    this.uniformArray[1] = position[1];
-    this.uniformArray[2] = position[2];
-    this.uniformArray[3] = SKYBOX_SIZE;
-    this.gpu.queue.writeBuffer(this.uniformBuffer, 0, this.uniformArray);
+    mat4.fromQuat(quat.inverse(camera.rotation), this.modelMatrix);
+
+    this.gpu.queue.writeBuffer(
+      this.uniformBuffer,
+      0,
+      this.modelMatrix.buffer,
+      this.modelMatrix.byteOffset,
+      this.modelMatrix.byteLength,
+    );
   }
 
   render(pass: GPURenderPassEncoder, shared: SharedUniforms, camera: Camera): void {
