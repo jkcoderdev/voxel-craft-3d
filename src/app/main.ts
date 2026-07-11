@@ -12,6 +12,7 @@ import { FrameLoop } from '@/engine/core/FrameLoop';
 import { FlyCameraController } from '@/engine/core/FlyCameraController';
 import { World } from '@/engine/world/World';
 import { ChunkRenderer } from '@/engine/rendering/world/ChunkRenderer';
+import { SkyboxRenderer } from '@/engine/rendering/world/SkyboxRenderer';
 
 const container = queryElementById('container');
 const worldCanvas = queryCanvasById('world-canvas');
@@ -25,6 +26,7 @@ const world = new World(gpu);
 
 const worldRenderer = new WorldRenderer(gpu, worldCanvas);
 
+worldRenderer.register(new SkyboxRenderer(worldRenderer.resources));
 worldRenderer.register(new ChunkRenderer(worldRenderer.resources, world));
 
 const overlayRenderer = new OverlayRenderer(overlayCanvas);
