@@ -312,12 +312,7 @@ export class Camera {
     const viewProjectionDirty = this.viewDirty || this.projectionDirty;
 
     if (this.viewDirty) {
-      const rotationLength = Math.hypot(this._rotation[0], this._rotation[1], this._rotation[2], this._rotation[3]);
-
-      this.normalizedRotation[0] = this._rotation[0] / rotationLength;
-      this.normalizedRotation[1] = this._rotation[1] / rotationLength;
-      this.normalizedRotation[2] = this._rotation[2] / rotationLength;
-      this.normalizedRotation[3] = this._rotation[3] / rotationLength;
+      quat.normalize(this._rotation, this.normalizedRotation);
 
       // 1. Get the rotation matrix from the quaternion (R)
       mat4.fromQuat(this.normalizedRotation, this.viewMatrix);
