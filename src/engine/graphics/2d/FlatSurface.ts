@@ -2,8 +2,8 @@ import { queryCanvasBySelector } from '@/shared/dom';
 
 export class FlatSurface {
   constructor(
-    private readonly canvas: HTMLCanvasElement,
-    private readonly context: CanvasRenderingContext2D,
+    public readonly canvas: HTMLCanvasElement,
+    public readonly context: CanvasRenderingContext2D,
   ) {}
 
   static create(canvas: HTMLCanvasElement | string, options?: CanvasRenderingContext2DSettings): FlatSurface {
@@ -20,5 +20,17 @@ export class FlatSurface {
   resize(width: number, height: number) {
     this.canvas.width = width;
     this.canvas.height = height;
+  }
+
+  get width(): number {
+    return this.canvas.width;
+  }
+
+  get height(): number {
+    return this.canvas.height;
+  }
+
+  clear(): void {
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 }

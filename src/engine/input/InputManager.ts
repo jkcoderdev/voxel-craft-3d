@@ -9,4 +9,9 @@ export class InputManager {
     this.keyboard = new Keyboard();
     this.pointerLockHandler = new PointerLockHandler(element);
   }
+
+  destroy(): void {
+    this.keyboard.destroy();
+    this.pointerLockHandler.destroy();
+  }
 }

@@ -94,6 +94,9 @@ export class FlyCameraController {
     const rotation = quat.fromEuler(this.pitch, this.yaw, 0, 'yxz');
     this.camera.rotation = rotation;
 
+    vec3.transformQuat(FORWARD, rotation, this.forward);
+    vec3.transformQuat(RIGHT, rotation, this.right);
+
     vec3.zero(this.moveDirection);
 
     if (this.keyboard.isAnyKeyDown(MOVE_FORWARD_KEYS)) {
@@ -102,12 +105,14 @@ export class FlyCameraController {
     if (this.keyboard.isAnyKeyDown(MOVE_BACKWARD_KEYS)) {
       vec3.subtract(this.moveDirection, this.forward, this.moveDirection);
     }
+
     if (this.keyboard.isAnyKeyDown(MOVE_RIGHT_KEYS)) {
       vec3.add(this.moveDirection, this.right, this.moveDirection);
     }
     if (this.keyboard.isAnyKeyDown(MOVE_LEFT_KEYS)) {
       vec3.subtract(this.moveDirection, this.right, this.moveDirection);
     }
+
     if (this.keyboard.isAnyKeyDown(MOVE_UP_KEYS)) {
       vec3.add(this.moveDirection, UP, this.moveDirection);
     }

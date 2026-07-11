@@ -22,13 +22,14 @@ export class WebGPUSurface {
       throw new Error('WebGPU API is not supported in your browser.');
     }
 
-    const device = gpu.device;
-    const format = gpu.preferredCanvasFormat;
-    const config: GPUCanvasConfiguration = Object.assign({ device, format }, options);
+    const config: GPUCanvasConfiguration = Object.assign(
+      { device: gpu.device, format: gpu.preferredCanvasFormat },
+      options,
+    );
 
     context.configure(config);
 
-    return new WebGPUSurface(_canvas, context, format);
+    return new WebGPUSurface(_canvas, context, config.format);
   }
 
   get texture(): GPUTexture {

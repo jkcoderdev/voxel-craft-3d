@@ -53,6 +53,7 @@ const frameLoop = new FrameLoop(({ timestamp, deltaTime }) => {
   camera.update();
 
   worldRenderer.render(camera, timestamp);
+  overlayRenderer.render();
 });
 
 resizeTracker.update();
@@ -60,4 +61,12 @@ frameLoop.start();
 
 container.addEventListener('click', () => {
   void controller.requestPointerLock();
+});
+
+window.addEventListener('blur', () => {
+  frameLoop.stop();
+});
+
+window.addEventListener('focus', () => {
+  frameLoop.start();
 });

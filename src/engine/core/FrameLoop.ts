@@ -51,7 +51,12 @@ export class FrameLoop {
     const deltaTime = timestamp - this.lastTimestamp;
     this.lastTimestamp = timestamp;
 
-    this.handler({ timestamp, deltaTime });
+    try {
+      this.handler({ timestamp, deltaTime });
+    } catch (e) {
+      this._running = false;
+      throw e;
+    }
 
     if (this._running) {
       this.animationFrameId = requestAnimationFrame(this.boundLoop);
