@@ -6,9 +6,9 @@ export class OverlayRenderer {
   constructor(canvasElement: HTMLCanvasElement) {
     this.surface = FlatSurface.create(canvasElement, {
       alpha: true,
-      // desynchronized: true,
-      // willReadFrequently: false,
-      // colorSpace: 'srgb',
+      desynchronized: true,
+      willReadFrequently: false,
+      colorSpace: 'srgb',
     });
   }
 
@@ -18,6 +18,5 @@ export class OverlayRenderer {
 
   render(): void {
     this.surface.clear();
-    this.surface.context.fillRect(0, 0, 100, 100);
   }
 }

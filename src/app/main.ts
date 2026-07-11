@@ -14,8 +14,8 @@ import { World } from '@/engine/world/World';
 import { ChunkRenderer } from '@/engine/rendering/world/ChunkRenderer';
 
 const container = queryElementById('container');
-const overlayCanvas = queryCanvasById('world-canvas');
-const worldCanvas = queryCanvasById('overlay-canvas');
+const worldCanvas = queryCanvasById('world-canvas');
+const overlayCanvas = queryCanvasById('overlay-canvas');
 
 const gpu = await WebGPUContext.create();
 
