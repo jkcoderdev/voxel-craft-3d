@@ -1,7 +1,7 @@
 import type { StaticMesh } from '@/engine/graphics/webgpu/StaticMesh';
 import type { WebGPUContext } from '@/engine/graphics/webgpu/WebGPUContext';
 import type { Chunk } from '@/engine/world/Chunk';
-import { ChunkMeshBuilder } from '@/engine/world/ChunkMeshBuilder';
+import { ChunkMeshBuilder, type AdjacentChunks } from '@/engine/world/ChunkMeshBuilder';
 
 export class ChunkMeshMap {
   private readonly meshes: Map<Chunk, StaticMesh> = new Map();
@@ -11,11 +11,11 @@ export class ChunkMeshMap {
     this.builder = new ChunkMeshBuilder(gpu);
   }
 
-  build(chunk: Chunk): StaticMesh {
+  build(chunk: Chunk, adjacentChunks: AdjacentChunks = {}): StaticMesh {
     const oldMesh = this.meshes.get(chunk);
     oldMesh?.destroy();
 
-    const mesh = this.builder.build(chunk);
+    const mesh = this.builder.build(chunk, adjacentChunks);
     this.meshes.set(chunk, mesh);
 
     return mesh;

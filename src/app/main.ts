@@ -22,7 +22,10 @@ const gpu = await WebGPUContext.create();
 
 const input = new InputManager(container);
 
-const world = new World(gpu);
+const world = new World(gpu, {
+  chunkRadius: 8,
+  maxChunkOperationsPerUpdate: 2,
+});
 
 const worldRenderer = new WorldRenderer(gpu, worldCanvas);
 

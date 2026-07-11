@@ -3,6 +3,7 @@ import type { StaticMesh } from '@/engine/graphics/webgpu/StaticMesh';
 import type { WebGPUContext } from '@/engine/graphics/webgpu/WebGPUContext';
 import { Chunk } from '@/engine/world/Chunk';
 import { ChunkMap } from '@/engine/world/ChunkMap';
+import type { AdjacentChunks } from '@/engine/world/ChunkMeshBuilder';
 import { ChunkMeshMap } from '@/engine/world/ChunkMeshMap';
 
 export interface WorldDescriptor {
@@ -149,7 +150,8 @@ export class World {
     chunk.generate();
 
     this.chunks.set(cx, cz, chunk);
-    this.meshes.build(chunk);
+    this.meshes.build(chunk, this.getAdjacentChunks(chunk));
+    this.rebuildNeighborMeshes(chunk);
   }
 
   private unloadChunk(cx: number, cz: number): void {
@@ -158,5 +160,33 @@ export class World {
     const chunk = this.chunks.get(cx, cz);
     this.meshes.delete(chunk);
     this.chunks.delete(cx, cz);
+    this.rebuildNeighborMeshes(chunk);
+  }
+
+  private getAdjacentChunks(chunk: Chunk): AdjacentChunks {
+    return {
+      minusZ: this.getLoadedChunk(chunk.cx, chunk.cz - 1),
+      plusZ: this.getLoadedChunk(chunk.cx, chunk.cz + 1),
+      minusX: this.getLoadedChunk(chunk.cx - 1, chunk.cz),
+      plusX: this.getLoadedChunk(chunk.cx + 1, chunk.cz),
+    };
+  }
+
+  private getLoadedChunk(cx: number, cz: number): Chunk | undefined {
+    return this.chunks.has(cx, cz) ? this.chunks.get(cx, cz) : undefined;
+  }
+
+  private rebuildNeighborMeshes(chunk: Chunk): void {
+    const neighbors = [
+      this.getLoadedChunk(chunk.cx, chunk.cz - 1),
+      this.getLoadedChunk(chunk.cx, chunk.cz + 1),
+      this.getLoadedChunk(chunk.cx - 1, chunk.cz),
+      this.getLoadedChunk(chunk.cx + 1, chunk.cz),
+    ];
+
+    for (const neighbor of neighbors) {
+      if (!neighbor) continue;
+      this.meshes.build(neighbor, this.getAdjacentChunks(neighbor));
+    }
   }
 }
