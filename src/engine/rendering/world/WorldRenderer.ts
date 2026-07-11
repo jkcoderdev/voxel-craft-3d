@@ -64,7 +64,7 @@ export class WorldRenderer {
       colorAttachments: [
         {
           view: this.surface.view,
-          clearValue: { r: 0, g: 0, b: 0.1, a: 1 },
+          clearValue: { r: 0, g: 0, b: 0, a: 1 },
           loadOp: 'clear',
           storeOp: 'store',
         },
@@ -78,7 +78,7 @@ export class WorldRenderer {
     });
 
     for (const subRenderer of this.subRenderers) {
-      subRenderer.render(pass, this.sharedUniforms);
+      subRenderer.render(pass, this.sharedUniforms, camera, timestamp);
     }
 
     pass.end();
