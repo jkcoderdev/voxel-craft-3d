@@ -1,5 +1,5 @@
 import { queryCanvasBySelector } from '@/shared/dom';
-import type { WebGPUContext } from '@/webgpu/WebGPUContext';
+import type { WebGPUContext } from '@/engine/graphics/webgpu/WebGPUContext';
 
 type Optional<T, K extends keyof T> = Omit<T, K> & Partial<T>;
 
@@ -13,22 +13,23 @@ export class WebGPUSurface {
   static create(
     canvas: HTMLCanvasElement | string,
     gpu: WebGPUContext,
-    options?: Optional<GPUCanvasConfiguration, 'device' | 'format'>,
+    options?: Optional<Omit<GPUCanvasConfiguration, 'device'>, 'format'>,
   ) {
     const _canvas = canvas instanceof HTMLCanvasElement ? canvas : queryCanvasBySelector(canvas);
 
     const context = _canvas.getContext('webgpu');
     if (!context) {
-      throw new Error('WebGPU is not supported in your browser.');
+      throw new Error('WebGPU API is not supported in your browser.');
     }
 
-    const device = gpu.device;
-    const format = gpu.preferredCanvasFormat;
-    const config: GPUCanvasConfiguration = Object.assign({ device, format }, options);
+    const config: GPUCanvasConfiguration = Object.assign(
+      { device: gpu.device, format: gpu.preferredCanvasFormat },
+      options,
+    );
 
     context.configure(config);
 
-    return new WebGPUSurface(_canvas, context, format);
+    return new WebGPUSurface(_canvas, context, config.format);
   }
 
   get texture(): GPUTexture {

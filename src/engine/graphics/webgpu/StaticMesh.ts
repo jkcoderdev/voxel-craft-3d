@@ -1,4 +1,4 @@
-import type { WebGPUContext } from '@/webgpu/WebGPUContext';
+import type { WebGPUContext } from '@/engine/graphics/webgpu/WebGPUContext';
 
 export interface StaticMeshDescriptor {
   vertices: Float32Array;

@@ -1,11 +1,12 @@
 import type { Camera } from '@/engine/core/Camera';
+import type { InputManager } from '@/engine/input/InputManager';
 import { Keyboard } from '@/engine/input/Keyboard';
 import { PointerLockHandler, type PointerLockMoveDelta } from '@/engine/input/PointerLockHandler';
 import { quat, vec3, type Vec3 } from 'wgpu-matrix';
 
 export interface FlyCameraControllerDescriptor {
   camera: Camera;
-  element: HTMLElement;
+  input: InputManager;
 
   moveSpeed?: number;
   sprintMultiplier?: number;
@@ -65,8 +66,8 @@ export class FlyCameraController {
     this.sprintMultiplier = descriptor.sprintMultiplier ?? DEFAULT_SPRINT_MULTIPLIER;
     this.lookSensitivity = descriptor.lookSensitivity ?? DEFAULT_LOOK_SENSITIVITY;
 
-    this.keyboard = new Keyboard();
-    this.pointerLock = new PointerLockHandler(descriptor.element);
+    this.keyboard = descriptor.input.keyboard;
+    this.pointerLock = descriptor.input.pointerLockHandler;
 
     this.pointerLock.on('move', this.handleLook);
 
@@ -104,12 +105,14 @@ export class FlyCameraController {
     if (this.keyboard.isAnyKeyDown(MOVE_BACKWARD_KEYS)) {
       vec3.subtract(this.moveDirection, this.forward, this.moveDirection);
     }
+
     if (this.keyboard.isAnyKeyDown(MOVE_RIGHT_KEYS)) {
       vec3.add(this.moveDirection, this.right, this.moveDirection);
     }
     if (this.keyboard.isAnyKeyDown(MOVE_LEFT_KEYS)) {
       vec3.subtract(this.moveDirection, this.right, this.moveDirection);
     }
+
     if (this.keyboard.isAnyKeyDown(MOVE_UP_KEYS)) {
       vec3.add(this.moveDirection, UP, this.moveDirection);
     }
@@ -121,9 +124,9 @@ export class FlyCameraController {
       vec3.normalize(this.moveDirection, this.moveDirection);
 
       const sprinting = this.keyboard.isAnyKeyDown(SPRINT_KEYS);
-      const speed = this.moveSpeed * (sprinting ? this.sprintMultiplier : 1) * deltaSeconds;
+      const speed = this.moveSpeed * (sprinting ? this.sprintMultiplier : 1);
 
-      this.camera.position = vec3.addScaled(this.camera.position, this.moveDirection, speed);
+      this.camera.position = vec3.addScaled(this.camera.position, this.moveDirection, speed * deltaSeconds);
     }
   }
 }
