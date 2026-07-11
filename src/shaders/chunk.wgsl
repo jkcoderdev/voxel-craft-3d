@@ -4,7 +4,6 @@ struct CameraUniforms {
 };
 
 @group(0) @binding(0) var<uniform> camera: CameraUniforms;
-@group(0) @binding(1) var<uniform> timestamp: f32;
 
 struct VertexInput {
   @location(0) position: vec3<f32>,
@@ -42,8 +41,8 @@ fn fsMain(input: VertexOutput) -> @location(0) vec4<f32> {
   let diffuse = max(dot(normal, lightDir), 0.0) * 0.8;
   let lighting = ambient + diffuse;
 
-  let baseColor = vec3<f32>(0.2, 0.6, 1.0);
-  let finalColor = rotateHue(baseColor, radians(length(input.position) + timestamp * 360.0 * 2.0)) * lighting * (sin(radians(timestamp * 360.0 * 0.125)) * 0.2 + 0.9);
+  let baseColor = vec3<f32>(0.1, 0.9, 0.4);
+  let finalColor = baseColor * lighting;
 
   return vec4<f32>(finalColor, 1.0);
 }
