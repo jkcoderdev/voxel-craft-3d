@@ -91,13 +91,8 @@ export class FlyCameraController {
   }
 
   update(deltaSeconds: number): void {
-    const cameraRotation = quat.fromEuler(this.pitch, this.yaw, 0, 'yxz');
-    this.camera.rotation = cameraRotation;
-
-    const movementRotation = quat.fromEuler(this.pitch, 0, 0, 'yxz');
-
-    vec3.transformQuat(FORWARD, movementRotation, this.forward);
-    vec3.transformQuat(RIGHT, movementRotation, this.right);
+    const rotation = quat.fromEuler(this.pitch, this.yaw, 0, 'yxz');
+    this.camera.rotation = rotation;
 
     vec3.zero(this.moveDirection);
 
