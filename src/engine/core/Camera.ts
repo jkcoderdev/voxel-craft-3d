@@ -320,7 +320,7 @@ export class Camera {
       this.normalizedRotation[3] = this._rotation[3] / rotationLength;
 
       // 1. Get the rotation matrix from the quaternion (R)
-      mat4.fromQuat(this._rotation, this.viewMatrix);
+      mat4.fromQuat(this.normalizedRotation, this.viewMatrix);
 
       // 2. Transpose it. Now viewMatrix = R^-1
       mat4.transpose(this.viewMatrix, this.viewMatrix);
