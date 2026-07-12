@@ -7,7 +7,7 @@ import { WorldRenderer } from '@/engine/rendering/world/WorldRenderer';
 import { OverlayRenderer } from '@/engine/rendering/overlay/OverlayRenderer';
 import { ResizeTracker } from '@/engine/core/ResizeTracker';
 import { Camera } from '@/engine/core/Camera';
-import { utils, vec3 } from 'wgpu-matrix';
+import { quat, utils, vec3 } from 'wgpu-matrix';
 import { FrameLoop } from '@/engine/core/FrameLoop';
 import { FlyCameraController } from '@/engine/core/FlyCameraController';
 import { World } from '@/engine/world/World';
@@ -25,7 +25,7 @@ const input = new InputManager(container);
 const world = new World(gpu, {
   seed: 0,
   chunkRadius: 4,
-  maxChunkOperationsPerUpdate: 1,
+  maxChunkOperationsPerUpdate: 2,
 });
 
 const worldRenderer = new WorldRenderer(gpu, worldCanvas);
@@ -36,9 +36,10 @@ worldRenderer.register(new ChunkRenderer(worldRenderer.resources, world));
 const overlayRenderer = new OverlayRenderer(overlayCanvas);
 
 const camera = new Camera({
-  position: vec3.create(8, 48, 8),
+  position: vec3.create(8, 128, 8),
   fov: utils.degToRad(70),
   far: 10000,
+  rotation: quat.fromEuler(-Math.PI / 2, 0, 0, 'yxz'),
 });
 
 const controller = new FlyCameraController({
@@ -46,7 +47,7 @@ const controller = new FlyCameraController({
   input,
 });
 
-const PIXEL_SIZE = 8;
+const PIXEL_SIZE = 1;
 
 const resizeTracker = new ResizeTracker(container, ({ physicalWidth, physicalHeight }) => {
   const width = Math.floor(physicalWidth / PIXEL_SIZE);

@@ -5,12 +5,21 @@ export interface HeightMapGeneratorDescriptor {
   seed: number;
   minimumHeight?: number;
   maximumHeight?: number;
+  frequency?: number;
   transformFunction?: (x: number) => number;
 }
 
+const DEFAULT_FREQUENCY = 0.01;
 const DEFAULT_MINIMUM_HEIGHT = 3;
 const DEFAULT_MAXIMUM_HEIGHT = 3;
 const DEFAULT_TRANSFORM_FUNCTION = (x: number) => x;
+
+function clamp(value: number, min: number, max: number) {
+  if (value > max) return max;
+  if (value < min) return min;
+
+  return value;
+}
 
 export class HeightMapGenerator {
   private readonly noise: NoiseFunction2D;
@@ -18,6 +27,7 @@ export class HeightMapGenerator {
 
   private readonly minimumHeight: number;
   private readonly maximumHeight: number;
+  private readonly frequency: number;
   private readonly transformFunction: (x: number) => number;
 
   constructor(descriptor: HeightMapGeneratorDescriptor) {
@@ -28,6 +38,7 @@ export class HeightMapGenerator {
 
     this.minimumHeight = descriptor.minimumHeight ?? DEFAULT_MINIMUM_HEIGHT;
     this.maximumHeight = descriptor.maximumHeight ?? DEFAULT_MAXIMUM_HEIGHT;
+    this.frequency = descriptor.frequency ?? DEFAULT_FREQUENCY;
     this.transformFunction = descriptor.transformFunction ?? DEFAULT_TRANSFORM_FUNCTION;
   }
 
@@ -36,7 +47,7 @@ export class HeightMapGenerator {
       const min = this.minimumHeight;
       const max = this.maximumHeight;
 
-      const noise = this.transformFunction(this.noise(x, z) * 0.5 + 0.5);
+      const noise = clamp(this.transformFunction(this.noise(x * this.frequency, z * this.frequency) * 0.5 + 0.5), 0, 1);
 
       return Math.round(noise * (max - min) + min);
     });

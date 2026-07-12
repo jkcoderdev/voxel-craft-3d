@@ -1,7 +1,7 @@
 import { HeightMapGenerator } from '@/engine/world/HeightMapGenerator';
 
 const MIN_TERRAIN_HEIGHT = 16;
-const MAX_TERRAIN_HEIGHT = 32;
+const MAX_TERRAIN_HEIGHT = 48;
 
 export class WorldGenerator {
   private heightMap: HeightMapGenerator;
@@ -11,6 +11,8 @@ export class WorldGenerator {
       seed,
       minimumHeight: MIN_TERRAIN_HEIGHT,
       maximumHeight: MAX_TERRAIN_HEIGHT,
+      frequency: 0.008,
+      transformFunction: (x) => x ** 2,
     });
   }
 
