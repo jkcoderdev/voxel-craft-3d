@@ -33,8 +33,8 @@ function getChunkKey(cx: number, cz: number): string {
 }
 
 export class World {
-  readonly chunkRadius: number;
-  readonly maxChunkOperationsPerUpdate: number;
+  private readonly chunkRadius: number;
+  private readonly maxChunkOperationsPerUpdate: number;
 
   private readonly meshes: ChunkMeshMap;
   private readonly chunks: ChunkMap;
@@ -107,11 +107,11 @@ export class World {
 
   private getDesiredChunks(centerX: number, centerZ: number): ChunkCoordinates[] {
     const desiredChunks: ChunkCoordinates[] = [];
-    const radiusSquared = this.chunkRadius * this.chunkRadius;
+    const radiusSquared = (this.chunkRadius + 1) ** 2;
 
     for (let offsetZ = -this.chunkRadius; offsetZ <= this.chunkRadius; offsetZ++) {
       for (let offsetX = -this.chunkRadius; offsetX <= this.chunkRadius; offsetX++) {
-        if (offsetX * offsetX + offsetZ * offsetZ > radiusSquared) continue;
+        if (offsetX * offsetX + offsetZ * offsetZ >= radiusSquared) continue;
 
         desiredChunks.push({ cx: centerX + offsetX, cz: centerZ + offsetZ });
       }

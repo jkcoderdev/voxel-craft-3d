@@ -13,6 +13,7 @@ struct VertexInput {
 struct VertexOutput {
   @builtin(position) position: vec4<f32>,
   @location(0) normal: vec3<f32>,
+  @location(1) height: f32,
 };
 
 @vertex
@@ -20,6 +21,7 @@ fn vsMain(input: VertexInput) -> VertexOutput {
   var output: VertexOutput;
   output.position = camera.projectionMatrix * camera.viewMatrix * vec4<f32>(input.position, 1.0);
   output.normal = input.normal;
+  output.height = input.position.y;
   return output;
 }
 
@@ -41,7 +43,7 @@ fn fsMain(input: VertexOutput) -> @location(0) vec4<f32> {
   let diffuse = max(dot(normal, lightDir), 0.0) * 0.8;
   let lighting = ambient + diffuse;
 
-  let baseColor = vec3<f32>(0.1, 0.9, 0.4);
+  let baseColor = rotateHue(vec3<f32>(0.1, 0.9, 0.4), radians((-input.height - 8.0) * 2.0));
   let finalColor = baseColor * lighting;
 
   return vec4<f32>(finalColor, 1.0);

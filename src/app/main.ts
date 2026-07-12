@@ -23,8 +23,8 @@ const gpu = await WebGPUContext.create();
 const input = new InputManager(container);
 
 const world = new World(gpu, {
-  chunkRadius: 8,
-  maxChunkOperationsPerUpdate: 2,
+  chunkRadius: 2,
+  maxChunkOperationsPerUpdate: 1,
 });
 
 const worldRenderer = new WorldRenderer(gpu, worldCanvas);
@@ -37,6 +37,7 @@ const overlayRenderer = new OverlayRenderer(overlayCanvas);
 const camera = new Camera({
   position: vec3.create(8, 32, 32),
   fov: utils.degToRad(70),
+  far: 10000,
 });
 
 const controller = new FlyCameraController({
@@ -44,11 +45,16 @@ const controller = new FlyCameraController({
   input,
 });
 
-const resizeTracker = new ResizeTracker(container, ({ physicalWidth, physicalHeight }) => {
-  worldRenderer.resize(physicalWidth, physicalHeight);
-  overlayRenderer.resize(physicalWidth, physicalHeight);
+const PIXEL_SIZE = 8;
 
-  const aspectRatio = physicalWidth / physicalHeight;
+const resizeTracker = new ResizeTracker(container, ({ physicalWidth, physicalHeight }) => {
+  const width = Math.floor(physicalWidth / PIXEL_SIZE);
+  const height = Math.floor(physicalHeight / PIXEL_SIZE);
+
+  worldRenderer.resize(width, height);
+  overlayRenderer.resize(width, height);
+
+  const aspectRatio = width / height;
   camera.aspect = aspectRatio;
 });
 
