@@ -23,7 +23,7 @@ const gpu = await WebGPUContext.create();
 const input = new InputManager(container);
 
 const world = new World(gpu, {
-  seed: 329874,
+  seed: 0,
   chunkRadius: 4,
   maxChunkOperationsPerUpdate: 1,
 });
@@ -36,7 +36,7 @@ worldRenderer.register(new ChunkRenderer(worldRenderer.resources, world));
 const overlayRenderer = new OverlayRenderer(overlayCanvas);
 
 const camera = new Camera({
-  position: vec3.create(8, 300, 8),
+  position: vec3.create(8, 48, 8),
   fov: utils.degToRad(70),
   far: 10000,
 });
