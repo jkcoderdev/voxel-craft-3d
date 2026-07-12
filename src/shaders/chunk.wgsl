@@ -43,7 +43,7 @@ fn fsMain(input: VertexOutput) -> @location(0) vec4<f32> {
   let diffuse = max(dot(normal, lightDir), 0.0) * 0.8;
   let lighting = ambient + diffuse;
 
-  let baseColor = rotateHue(vec3<f32>(0.1, 0.9, 0.4), radians((-input.height - 8.0) * 2.0));
+  let baseColor = rotateHue(vec3<f32>(0.1, 0.1, 0.9), radians((-input.height - 8.0) * 2.0));
   let finalColor = baseColor * lighting;
 
   return vec4<f32>(finalColor, 1.0);

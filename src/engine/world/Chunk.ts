@@ -1,5 +1,7 @@
-const MIN_TERRAIN_HEIGHT = 16;
-const MAX_TERRAIN_HEIGHT = 32;
+import type { WorldGenerator } from '@/engine/world/WorldGenerator';
+
+const CHUNK_SIZE = 16;
+const CHUNK_HEIGHT = 16;
 
 export class Chunk {
   private readonly data: Uint8Array;
@@ -8,7 +10,7 @@ export class Chunk {
     public readonly cx: number,
     public readonly cz: number,
   ) {
-    this.data = new Uint8Array(16 * 16 * 256);
+    this.data = new Uint8Array(CHUNK_SIZE * CHUNK_SIZE * CHUNK_HEIGHT);
   }
 
   getBlock(x: number, y: number, z: number): number {
@@ -19,22 +21,18 @@ export class Chunk {
     this.data[(y << 8) | (z << 4) | x] = value;
   }
 
-  generate(): void {
-    this.data.fill(0);
+  generate(generator: WorldGenerator): void {
+    const startX = this.cx * CHUNK_SIZE;
+    const startZ = this.cz * CHUNK_SIZE;
 
-    const startX = this.cx * 16;
-    const startZ = this.cz * 16;
-
-    for (let z = 0; z < 16; z++) {
-      for (let x = 0; x < 16; x++) {
+    for (let z = 0; z < CHUNK_SIZE; z++) {
+      for (let x = 0; x < CHUNK_SIZE; x++) {
         const realX = startX + x;
         const realZ = startZ + z;
 
-        const noise = Math.sin((realX / 8) * Math.PI) * Math.sin((realZ / 8) * Math.PI) * 0.5 + 0.5;
-        const height = Math.round(noise * (MAX_TERRAIN_HEIGHT - MIN_TERRAIN_HEIGHT)) + MIN_TERRAIN_HEIGHT;
-
-        for (let y = 0; y < height; y++) {
-          this.setBlock(x, y, z, 1);
+        for (let y = 0; y < CHUNK_HEIGHT; y++) {
+          const block = generator.block(realX, y, realZ);
+          this.setBlock(x, y, z, block);
         }
       }
     }

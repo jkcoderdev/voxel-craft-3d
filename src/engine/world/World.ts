@@ -5,8 +5,10 @@ import { Chunk } from '@/engine/world/Chunk';
 import { ChunkMap } from '@/engine/world/ChunkMap';
 import type { AdjacentChunks } from '@/engine/world/ChunkMeshBuilder';
 import { ChunkMeshMap } from '@/engine/world/ChunkMeshMap';
+import { WorldGenerator } from '@/engine/world/WorldGenerator';
 
 export interface WorldDescriptor {
+  seed: number;
   chunkRadius?: number;
   maxChunkOperationsPerUpdate?: number;
 }
@@ -38,12 +40,14 @@ export class World {
 
   private readonly meshes: ChunkMeshMap;
   private readonly chunks: ChunkMap;
+  private readonly generator: WorldGenerator;
+
   private pendingOperations: ChunkOperation[] = [];
 
   private currentChunkX: number | undefined;
   private currentChunkZ: number | undefined;
 
-  constructor(gpu: WebGPUContext, descriptor: WorldDescriptor = {}) {
+  constructor(gpu: WebGPUContext, descriptor: WorldDescriptor) {
     const chunkRadius = descriptor.chunkRadius ?? DEFAULT_CHUNK_RADIUS;
     const maxChunkOperationsPerUpdate =
       descriptor.maxChunkOperationsPerUpdate ?? DEFAULT_MAX_CHUNK_OPERATIONS_PER_UPDATE;
@@ -53,6 +57,7 @@ export class World {
 
     this.meshes = new ChunkMeshMap(gpu);
     this.chunks = new ChunkMap();
+    this.generator = new WorldGenerator(descriptor.seed);
   }
 
   update(camera: Camera): void {
@@ -147,7 +152,7 @@ export class World {
     if (this.chunks.has(cx, cz)) return;
 
     const chunk = new Chunk(cx, cz);
-    chunk.generate();
+    chunk.generate(this.generator);
 
     this.chunks.set(cx, cz, chunk);
     this.meshes.build(chunk, this.getAdjacentChunks(chunk));

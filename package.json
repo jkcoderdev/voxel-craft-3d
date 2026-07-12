@@ -20,6 +20,8 @@
     "@parcel/watcher@2.5.6": true
   },
   "dependencies": {
+    "alea": "^1.0.1",
+    "simplex-noise": "^4.0.3",
     "wgpu-matrix": "^3.4.2"
   }
 }
