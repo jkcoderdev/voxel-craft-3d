@@ -1,4 +1,4 @@
-import chunkShaderCode from '@/shaders/chunk.wgsl?raw';
+import chunkShaderCode from '@/assets/shaders/chunk.wgsl?raw';
 import type { SharedUniforms } from '@/engine/rendering/world/SharedUniforms';
 import type { SubRenderer } from '@/engine/rendering/world/SubRenderer';
 import type { RendererResources } from '@/engine/rendering/world/WorldRenderer';

@@ -1,5 +1,5 @@
 import { FlatSurface } from '@/engine/graphics/2d/FlatSurface';
-import crosshairUrl from '@/textures/crosshair.png';
+import crosshairUrl from '@/assets/textures/crosshair.png';
 
 export class OverlayRenderer {
   private readonly surface: FlatSurface;

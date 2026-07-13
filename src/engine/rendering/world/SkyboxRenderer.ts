@@ -1,4 +1,4 @@
-import skyboxShaderCode from '@/shaders/skybox.wgsl?raw';
+import skyboxShaderCode from '@/assets/shaders/skybox.wgsl?raw';
 import type { Camera } from '@/engine/core/Camera';
 import { StaticMesh } from '@/engine/graphics/webgpu/StaticMesh';
 import type { WebGPUContext } from '@/engine/graphics/webgpu/WebGPUContext';
