@@ -6,6 +6,10 @@ export default defineConfig({
   appType: 'mpa',
   server: {
     port: 8000,
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
   },
 
   plugins: [],
