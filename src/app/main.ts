@@ -13,6 +13,7 @@ import { FlyCameraController } from '@/engine/core/FlyCameraController';
 import { World } from '@/engine/world/World';
 import { ChunkRenderer } from '@/engine/rendering/world/ChunkRenderer';
 import { SkyboxRenderer } from '@/engine/rendering/world/SkyboxRenderer';
+import { BlockInteractionController } from '@/engine/world/BlockInteractionController';
 
 const container = queryElementById('container');
 const worldCanvas = queryCanvasById('world-canvas');
@@ -46,6 +47,8 @@ const controller = new FlyCameraController({
   camera,
   input,
 });
+
+const blockInteraction = new BlockInteractionController(camera, world, container);
 
 const PIXEL_SIZE = 1;
 

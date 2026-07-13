@@ -77,6 +77,60 @@ export class World {
     return this.meshes.getAll();
   }
 
+  getBlock(x: number, y: number, z: number): number {
+    const cx = Math.floor(x / CHUNK_SIZE);
+    const cz = Math.floor(z / CHUNK_SIZE);
+
+    if (!this.chunks.has(cx, cz)) return 0;
+
+    const chunk = this.chunks.get(cx, cz);
+    const localX = x - cx * CHUNK_SIZE;
+    const localY = y;
+    const localZ = z - cz * CHUNK_SIZE;
+
+    return chunk.getBlock(localX, localY, localZ);
+  }
+
+  setBlock(x: number, y: number, z: number, value: number): void {
+    const cx = Math.floor(x / CHUNK_SIZE);
+    const cz = Math.floor(z / CHUNK_SIZE);
+
+    if (!this.chunks.has(cx, cz)) return;
+
+    const chunk = this.chunks.get(cx, cz);
+    const localX = x - cx * CHUNK_SIZE;
+    const localY = y;
+    const localZ = z - cz * CHUNK_SIZE;
+
+    chunk.setBlock(localX, localY, localZ, value);
+
+    // Rebuild the chunk mesh for the modified chunk
+    this.meshes.build(chunk, this.getAdjacentChunks(chunk));
+
+    // Rebuild neighbor meshes if the block is on a chunk boundary
+    const needsMinusX = localX === 0;
+    const needsPlusX = localX === CHUNK_SIZE - 1;
+    const needsMinusZ = localZ === 0;
+    const needsPlusZ = localZ === CHUNK_SIZE - 1;
+
+    if (needsMinusX) {
+      const neighbor = this.getLoadedChunk(cx - 1, cz);
+      if (neighbor) this.meshes.build(neighbor, this.getAdjacentChunks(neighbor));
+    }
+    if (needsPlusX) {
+      const neighbor = this.getLoadedChunk(cx + 1, cz);
+      if (neighbor) this.meshes.build(neighbor, this.getAdjacentChunks(neighbor));
+    }
+    if (needsMinusZ) {
+      const neighbor = this.getLoadedChunk(cx, cz - 1);
+      if (neighbor) this.meshes.build(neighbor, this.getAdjacentChunks(neighbor));
+    }
+    if (needsPlusZ) {
+      const neighbor = this.getLoadedChunk(cx, cz + 1);
+      if (neighbor) this.meshes.build(neighbor, this.getAdjacentChunks(neighbor));
+    }
+  }
+
   private rebuildPendingOperations(): void {
     const currentChunkX = this.currentChunkX;
     const currentChunkZ = this.currentChunkZ;
