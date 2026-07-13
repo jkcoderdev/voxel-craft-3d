@@ -1,4 +1,4 @@
-import { PRNG } from '@/math/PRNG';
+import { PRNG } from '@/engine/math/PRNG';
 import { createNoise2D } from 'simplex-noise';
 
 export type NoiseFunction2D = (x: number, y: number) => number;

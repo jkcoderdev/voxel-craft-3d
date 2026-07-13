@@ -1,5 +1,5 @@
 import { HeightMapCache } from '@/engine/world/HeightMapCache';
-import { type NoiseFunction2D, SimplexNoise2D } from '@/math/SimplexNoise2D';
+import { type NoiseFunction2D, SimplexNoise2D } from '@/engine/math/SimplexNoise2D';
 
 export interface HeightMapGeneratorDescriptor {
   seed: number;
