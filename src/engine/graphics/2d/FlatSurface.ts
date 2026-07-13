@@ -33,4 +33,8 @@ export class FlatSurface {
   clear(): void {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
+
+  drawImage(image: CanvasImageSource, x: number, y: number): void {
+    this.context.drawImage(image, x, y);
+  }
 }
