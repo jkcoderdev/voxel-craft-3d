@@ -27,19 +27,31 @@
 ```text
 index.html
 src/
-  app/
-    main.ts (app entrypoint)
   styles/
     main.scss
   shared/
     types/ (.d.ts files)
     dom.ts (DOM helpers)
+  app/
+    main.ts (app entrypoint)
   webgpu/ (WebGPU helpers and abstractions)
-  shaders/ (.wgsl shader files)
+  assets/
+    shaders/ (.wgsl shaders)
+    textures/ (.png textures)
   engine/
     core/
+    graphics/
+      2d/
+      webgpu/
+    rendering/
     input/
     world/
+    math/
+  wasm/
+    bin/ (generated .wasm files)
+    source/ (.c source files)
+    Makefile
+  workers/ (.ts worker files)
 ```
 
 **Style guide**:
