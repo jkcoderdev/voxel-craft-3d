@@ -24,6 +24,6 @@ Build the project:
 npm run build
 ```
 
-## Recommended Extensions
+## Recommended Extensions for VSCode
 
 - [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
