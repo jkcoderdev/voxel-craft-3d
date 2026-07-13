@@ -44,7 +44,19 @@ fn fsMain(input: VertexOutput) -> @location(0) vec4<f32> {
   let sunDirection = normalize(vec3<f32>(-0.45, 0.65, -0.6));
   let sunAlignment = max(dot(direction, sunDirection), 0.0);
   let sunGlow = pow(sunAlignment, 32.0) * 0.22;
-  let sunDisk = smoothstep(0.997, 0.9995, sunAlignment);
+
+  // Square sun disk via tangent-plane projection
+  let sunUp = select(vec3<f32>(1.0, 0.0, 0.0), vec3<f32>(0.0, 1.0, 0.0), abs(sunDirection.y) < 0.99);
+  let sunTangent = normalize(cross(sunDirection, sunUp));
+  let sunBitangent = cross(sunDirection, sunTangent);
+  let proj = direction - sunDirection * dot(direction, sunDirection);
+  let su = dot(proj, sunTangent);
+  let sv = dot(proj, sunBitangent);
+  let squareDist = max(abs(su), abs(sv));
+
+  let sunHalfSize = 0.055;
+  let sunDisk = 1.0 - smoothstep(sunHalfSize - 0.003, sunHalfSize + 0.003, squareDist);
+
   let sunColor = vec3<f32>(1.0, 0.78, 0.38);
   let diskColor = vec3<f32>(1.0, 0.97, 0.82);
 
