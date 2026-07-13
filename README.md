@@ -2,6 +2,8 @@
 
 A voxel sandbox game.
 
+![Voxel Craft 3D Screenshot](achievements/5-block-placing-and-removing.png "Voxel Craft 3D Screenshot")
+
 ## Getting Started
 
 Install the dependencies:
