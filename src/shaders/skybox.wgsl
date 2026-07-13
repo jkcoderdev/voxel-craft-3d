@@ -55,7 +55,8 @@ fn fsMain(input: VertexOutput) -> @location(0) vec4<f32> {
   let squareDist = max(abs(su), abs(sv));
 
   let sunHalfSize = 0.055;
-  let sunDisk = 1.0 - smoothstep(sunHalfSize - 0.003, sunHalfSize + 0.003, squareDist);
+  let sunOnFrontSide = smoothstep(0.0, 0.05, dot(direction, sunDirection));
+  let sunDisk = (1.0 - smoothstep(sunHalfSize - 0.003, sunHalfSize + 0.003, squareDist)) * sunOnFrontSide;
 
   let sunColor = vec3<f32>(1.0, 0.78, 0.38);
   let diskColor = vec3<f32>(1.0, 0.97, 0.82);
