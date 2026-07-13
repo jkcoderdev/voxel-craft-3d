@@ -1,7 +1,7 @@
 import type { WorldGenerator } from '@/engine/world/WorldGenerator';
 
-const CHUNK_SIZE = 16;
-const CHUNK_HEIGHT = 256;
+export const CHUNK_SIZE = 16;
+export const CHUNK_HEIGHT = 256;
 
 export class Chunk {
   private readonly data: Uint8Array;

@@ -1,7 +1,8 @@
 import type { Camera } from '@/engine/core/Camera';
+import type { AABB, Frustum } from '@/engine/core/Frustum';
 import type { StaticMesh } from '@/engine/graphics/webgpu/StaticMesh';
 import type { WebGPUContext } from '@/engine/graphics/webgpu/WebGPUContext';
-import { Chunk } from '@/engine/world/Chunk';
+import { Chunk, CHUNK_HEIGHT, CHUNK_SIZE } from '@/engine/world/Chunk';
 import { ChunkMap } from '@/engine/world/ChunkMap';
 import type { AdjacentChunks } from '@/engine/world/ChunkMeshBuilder';
 import { ChunkMeshMap } from '@/engine/world/ChunkMeshMap';
@@ -26,7 +27,6 @@ interface ChunkCoordinates {
   cz: number;
 }
 
-const CHUNK_SIZE = 16;
 const DEFAULT_CHUNK_RADIUS = 4;
 const DEFAULT_MAX_CHUNK_OPERATIONS_PER_UPDATE = 1;
 
@@ -75,6 +75,38 @@ export class World {
 
   getChunkMeshes(): IterableIterator<StaticMesh> {
     return this.meshes.getAll();
+  }
+
+  /**
+   * Get chunk meshes whose bounding boxes intersect the camera frustum.
+   * Empty meshes (0 indices) are skipped to avoid no-op draw calls.
+   *
+   * @param frustum - The view frustum, already extracted from the camera's VP matrix.
+   * @param result  - Pre-allocated array that will be cleared and filled with visible meshes.
+   */
+  getVisibleChunkMeshes(frustum: Frustum, result: StaticMesh[]): void {
+    result.length = 0;
+
+    for (const chunk of this.chunks.getAll()) {
+      const minX = chunk.cx * CHUNK_SIZE;
+      const minZ = chunk.cz * CHUNK_SIZE;
+
+      const aabb: AABB = {
+        minX,
+        minY: 0,
+        minZ,
+        maxX: minX + CHUNK_SIZE,
+        maxY: CHUNK_HEIGHT,
+        maxZ: minZ + CHUNK_SIZE,
+      };
+
+      if (!frustum.containsAABB(aabb)) continue;
+
+      const mesh = this.meshes.get(chunk);
+      if (mesh && !mesh.isEmpty) {
+        result.push(mesh);
+      }
+    }
   }
 
   getBlock(x: number, y: number, z: number): number {

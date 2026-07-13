@@ -350,4 +350,8 @@ export class Camera {
   get projectionMatrix(): Float32Array {
     return this._projectionMatrix as Float32Array;
   }
+
+  get viewProjectionMatrix(): Float32Array {
+    return this._viewProjectionMatrix as Float32Array;
+  }
 }

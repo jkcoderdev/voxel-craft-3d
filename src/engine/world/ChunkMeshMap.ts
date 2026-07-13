@@ -21,6 +21,10 @@ export class ChunkMeshMap {
     return mesh;
   }
 
+  get(chunk: Chunk): StaticMesh | undefined {
+    return this.meshes.get(chunk);
+  }
+
   getAll(): IterableIterator<StaticMesh> {
     return this.meshes.values();
   }

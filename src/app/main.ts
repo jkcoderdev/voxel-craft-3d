@@ -26,7 +26,7 @@ const input = new InputManager(container);
 const world = new World(gpu, {
   seed: 0,
   chunkRadius: 4,
-  maxChunkOperationsPerUpdate: 2,
+  maxChunkOperationsPerUpdate: 1,
 });
 
 const worldRenderer = new WorldRenderer(gpu, worldCanvas);
