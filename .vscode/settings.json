@@ -6,5 +6,10 @@
   "js/ts.preferences.importModuleSpecifier": "non-relative",
   "js/ts.preferences.importModuleSpecifierEnding": "minimal",
   "js/ts.suggest.paths": true,
-  "js/ts.preferences.quoteStyle": "single"
+  "js/ts.preferences.quoteStyle": "single",
+
+  "makefile.makeDirectory": "${workspaceFolder}/src/wasm",
+  "makefile.makefilePath": "${workspaceFolder}/src/wasm/Makefile",
+
+  "C_Cpp.debugShortcut": false
 }

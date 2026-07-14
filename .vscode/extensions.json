@@ -1,3 +1,10 @@
 {
-  "recommendations": ["esbenp.prettier-vscode"]
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "ms-vscode.cpptools",
+    "ms-vscode.makefile-tools",
+    "ms-vscode.wasm-dwarf-debugging",
+    "dtsvet.vscode-wasm",
+    "PolyMeilex.wgsl"
+  ]
 }
